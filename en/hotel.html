@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>4U Hotel — An oasis of relaxation in Carinthia · Austria</title>
+<meta name="description" content="4U Hotel in the heart of Carinthia, just minutes from the Italian and Slovenian border. 43 rooms, buffet breakfast, restaurant, 24h parking. Partner of the Wellcum club." />
+<link rel="icon" type="image/webp" href="../assets/hotel/cropped-Logo-scroll-270x270.webp" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@300;400;500;600&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body class="theme-hotel">
+
+<div class="grain" aria-hidden="true"></div>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"></div>
+<div class="cursor-dot" aria-hidden="true"></div>
+
+<!-- ░░ PRELOADER ░░ -->
+<div class="preloader" id="preloader" aria-hidden="true">
+  <div class="preloader__mark">4U</div>
+  <div class="preloader__bar"><span></span></div>
+</div>
+
+<!-- ░░ NAV ░░ -->
+<header class="nav" id="nav">
+  <a href="#top" class="nav__logo" aria-label="4U Hotel — Home">
+    <img src="../assets/hotel/Logo-negativ.webp" alt="4U Hotel" />
+  </a>
+  <nav class="nav__links" id="navLinks">
+    <a href="#benvenuti">Hotel</a>
+    <a href="#camere">Rooms</a>
+    <a href="#servizi">Services</a>
+    <a href="#contatti">Contact</a>
+    <a href="index.html">Wellcum Club</a>
+  </nav>
+  <div class="nav__right">
+    <div class="nav__lang" aria-label="Lingua">
+      <a href="../hotel.html">IT</a><span>/</span><a class="is-active" href="../en/hotel.html">EN</a><span>/</span><a href="../de/hotel.html">DE</a>
+    </div>
+    <a href="https://4uhotel.at/buchen/" target="_blank" rel="noopener" class="btn btn--gold btn--sm" data-magnetic>Book</a>
+    <button class="nav__burger" id="burger" aria-label="Menu" aria-expanded="false"><span></span><span></span></button>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ░░ HERO (opening video kept) ░░ -->
+  <section class="hero" id="hero">
+    <video class="hero__video" id="heroVideo" autoplay muted loop playsinline preload="auto" poster="../assets/hotel/DSC03410.webp">
+      <source src="https://vstr.wellcum.at/prova.mp4" type="video/mp4" />
+    </video>
+    <div class="hero__veil" aria-hidden="true"></div>
+    <div class="hero__content">
+      <p class="eyebrow reveal" data-reveal>4U Hotel · Carinthia · Austria</p>
+      <h1 class="hero__title">
+        <span class="line" data-reveal><span>An oasis of <em>relaxation</em></span></span>
+        <span class="line" data-reveal><span>in Carinthia</span></span>
+      </h1>
+      <p class="hero__sub reveal" data-reveal>In the heart of Carinthia, just minutes from the Italian and Slovenian border. Every comfort, a step away from the Wellcum club.</p>
+      <div class="hero__cta reveal" data-reveal>
+        <a href="https://4uhotel.at/buchen/" target="_blank" rel="noopener" class="btn btn--gold" data-magnetic>Book now</a>
+        <a href="#camere" class="btn btn--ghost" data-magnetic>The rooms</a>
+      </div>
+    </div>
+    <div class="hero__stats" data-reveal>
+      <div class="stat"><span class="stat__num" data-count="43" data-suffix="">0</span><span class="stat__label">rooms</span></div>
+      <div class="stat"><span class="stat__num" data-count="2" data-suffix="">0</span><span class="stat__label">EV chargers</span></div>
+      <div class="stat"><span class="stat__num" data-count="24" data-suffix="h">0</span><span class="stat__label">parking</span></div>
+      <div class="stat"><span class="stat__num" data-count="0" data-suffix="€">0</span><span class="stat__label">WiFi included</span></div>
+    </div>
+    <a class="hero__scroll" href="#benvenuti" aria-label="Scroll"><span></span>scroll</a>
+  </section>
+
+  <!-- ░░ BENVENUTI ░░ -->
+  <section class="section" id="benvenuti">
+    <div class="section__head">
+      <p class="eyebrow" data-reveal>01 — Welcome</p>
+      <h2 class="section__title" data-reveal>The best you could <em>wish for</em> in Carinthia</h2>
+    </div>
+    <div class="club__grid">
+      <div class="club__lead" data-reveal>
+        <p>Welcome to the 4U Hotel, in the heart of Carinthia, just minutes from the Italian and Slovenian border. Every comfort, a short walk from the Wellcum club.</p>
+      </div>
+      <figure class="club__media" data-reveal data-parallax>
+        <img src="../assets/hotel/DSC03384.webp" alt="Interiors of the 4U Hotel" loading="lazy" />
+        <figcaption>Klagenfurt · Carinthia</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ░░ GALLERIA (foto & video scorrevoli) ░░ -->
+  <section class="section gallery" id="galleria">
+    <div class="section__head">
+      <p class="eyebrow" data-reveal>✦ — Gallery</p>
+      <h2 class="section__title" data-reveal>A glimpse of the <em>4U Hotel</em></h2>
+    </div>
+    <div class="mediarail" data-reveal>
+      <div class="mediarail__track">
+        <figure class="mediatile"><img src="../assets/hotel/DSC03410.webp" alt="Room at the 4U Hotel" loading="lazy" /><figcaption class="mediatile__tag">Rooms</figcaption></figure>
+        <figure class="mediatile"><video src="https://vstr.wellcum.at/prova.mp4" autoplay muted loop playsinline preload="metadata"></video><figcaption class="mediatile__tag">4U Hotel</figcaption></figure>
+        <figure class="mediatile"><img src="../assets/hotel/DSC03384.webp" alt="Interiors" loading="lazy" /><figcaption class="mediatile__tag">Interiors</figcaption></figure>
+        <figure class="mediatile"><img src="../assets/hotel/DSC03385.webp" alt="Details" loading="lazy" /><figcaption class="mediatile__tag">Details</figcaption></figure>
+        <figure class="mediatile"><img src="../assets/hotel/DSC03403.webp" alt="Comfort" loading="lazy" /><figcaption class="mediatile__tag">Comfort</figcaption></figure>
+        <figure class="mediatile"><img src="../assets/hotel/DSC05855.webp" alt="Suite" loading="lazy" /><figcaption class="mediatile__tag">Suite</figcaption></figure>
+        <!-- duplicato per loop continuo -->
+        <figure class="mediatile" aria-hidden="true"><img src="../assets/hotel/DSC03410.webp" alt="" loading="lazy" /><figcaption class="mediatile__tag">Rooms</figcaption></figure>
+        <figure class="mediatile" aria-hidden="true"><video src="https://vstr.wellcum.at/prova.mp4" autoplay muted loop playsinline preload="metadata"></video><figcaption class="mediatile__tag">4U Hotel</figcaption></figure>
+        <figure class="mediatile" aria-hidden="true"><img src="../assets/hotel/DSC03384.webp" alt="" loading="lazy" /><figcaption class="mediatile__tag">Interiors</figcaption></figure>
+        <figure class="mediatile" aria-hidden="true"><img src="../assets/hotel/DSC03385.webp" alt="" loading="lazy" /><figcaption class="mediatile__tag">Details</figcaption></figure>
+        <figure class="mediatile" aria-hidden="true"><img src="../assets/hotel/DSC03403.webp" alt="" loading="lazy" /><figcaption class="mediatile__tag">Comfort</figcaption></figure>
+        <figure class="mediatile" aria-hidden="true"><img src="../assets/hotel/DSC05855.webp" alt="" loading="lazy" /><figcaption class="mediatile__tag">Suite</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ CAMERE ░░ -->
+  <section class="section" id="camere">
+    <div class="section__head">
+      <p class="eyebrow" data-reveal>02 — The rooms</p>
+      <h2 class="section__title" data-reveal>43 rooms designed for your <em>rest</em></h2>
+    </div>
+    <div class="rooms">
+      <article class="room" data-reveal>
+        <img class="room__img" src="../assets/hotel/DSC03410.webp" alt="Apartment" loading="lazy" />
+        <div class="room__body">
+          <h3>Apartments</h3>
+          <p>Spacious, self-contained spaces, ideal for extended stays and for those seeking maximum independence.</p>
+          <a href="https://4uhotel.at/buchen/" target="_blank" rel="noopener" class="link-arrow">Book now</a>
+        </div>
+      </article>
+      <article class="room" data-reveal>
+        <img class="room__img" src="../assets/hotel/DSC03403.webp" alt="Double room for single use" loading="lazy" />
+        <div class="room__body">
+          <h3>Double for single use</h3>
+          <p>A double room all to yourself: generous comfort and privacy, perfect for the solo traveller.</p>
+          <a href="https://4uhotel.at/buchen/" target="_blank" rel="noopener" class="link-arrow">Book now</a>
+        </div>
+      </article>
+      <article class="room" data-reveal>
+        <img class="room__img" src="../assets/hotel/DSC05855.webp" alt="Double room" loading="lazy" />
+        <div class="room__body">
+          <h3>Double room</h3>
+          <p>Elegance and comfort for two, with all services included for a carefree stay.</p>
+          <a href="https://4uhotel.at/buchen/" target="_blank" rel="noopener" class="link-arrow">Book now</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ░░ SERVIZI ░░ -->
+  <section class="section" id="servizi">
+    <div class="section__head">
+      <p class="eyebrow" data-reveal>03 — Services</p>
+      <h2 class="section__title" data-reveal>All included, for your <em>comfort</em></h2>
+    </div>
+    <div class="amen" data-reveal>
+      <div class="amen__item">
+        <svg class="amen__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13v5a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8Z"/><path d="M17 9h2a2 2 0 0 1 0 4h-2"/><path d="M7 3v2M11 3v2"/></svg>
+        <h4>Buffet breakfast</h4>
+        <p>Every day from 7:30 to 10:00, sweet and savoury.</p>
+      </div>
+      <div class="amen__item">
+        <svg class="amen__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 17V8h3.5a2.5 2.5 0 0 1 0 5H9"/></svg>
+        <h4>24h parking</h4>
+        <p>Enough spaces for everyone, with 2 electric charging stations.</p>
+      </div>
+      <div class="amen__item">
+        <svg class="amen__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v8a2 2 0 0 0 4 0V3M7 11v10"/><path d="M16 3c-1.5 0-2.5 1.5-2.5 4.5S14.5 12 16 12v9"/></svg>
+        <h4>Restaurant</h4>
+        <p>Buffet restaurant with a wide variety of dishes.</p>
+      </div>
+      <div class="amen__item">
+        <svg class="amen__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1"/></svg>
+        <h4>Free WiFi</h4>
+        <p>Fast internet throughout the property, included in the price.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ PRENOTA ░░ -->
+  <section class="booking" id="prenota">
+    <div class="booking__bg" style="background-image:url('../assets/hotel/DSC03410.webp')" aria-hidden="true"></div>
+    <div class="booking__inner" data-reveal>
+      <p class="eyebrow" style="justify-content:center" data-reveal>04 — Book</p>
+      <h2>Book your stay</h2>
+      <p>Check availability and rates in real time and secure your room at the 4U Hotel.</p>
+      <a href="https://4uhotel.at/buchen/" target="_blank" rel="noopener" class="btn btn--gold" data-magnetic>Go to booking</a>
+    </div>
+  </section>
+
+  <!-- ░░ CONTATTI ░░ -->
+  <section class="section contatti" id="contatti">
+    <div class="section__head">
+      <p class="eyebrow" data-reveal>05 — Contact &amp; Getting here</p>
+      <h2 class="section__title" data-reveal>We look forward to seeing you in <em>Carinthia</em></h2>
+    </div>
+    <div class="contatti__grid">
+      <div class="contatti__info" data-reveal>
+        <div class="cinfo"><span class="cinfo__k">Address</span><span class="cinfo__v">Kurandtplatz 1<br />9020 Klagenfurt · Carinthia, Austria</span></div>
+        <div class="cinfo"><span class="cinfo__k">Phone</span><span class="cinfo__v"><a href="tel:+43425520002">+43 4255 20002</a></span></div>
+        <div class="cinfo"><span class="cinfo__k">Email</span><span class="cinfo__v"><a href="mailto:reception@4uhotel.at">reception@4uhotel.at</a></span></div>
+        <div class="cinfo"><span class="cinfo__k">Breakfast</span><span class="cinfo__v">Every day · 7:30 – 10:00</span></div>
+        <div class="cinfo"><span class="cinfo__k">Bookings</span><span class="cinfo__v"><a href="https://4uhotel.at/buchen/" target="_blank" rel="noopener">4uhotel.at/buchen</a></span></div>
+      </div>
+      <div class="contatti__map" data-reveal>
+        <iframe title="4U Hotel map" src="https://www.google.com/maps?q=Klagenfurt,%20K%C3%A4rnten,%20Austria&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ BRIDGE → CLUB ░░ -->
+  <section class="bridge" aria-label="Wellcum Club" style="padding-bottom:clamp(40px,6vw,80px);">
+    <div class="bridge__inner" data-reveal>
+      <div class="bridge__txt">
+        <h3>A short walk from the <em>Wellcum</em> club</h3>
+        <p>7,000 m² of spa, wellness and events — the realm of pleasure, 364 days a year.</p>
+      </div>
+      <a href="index.html" class="btn btn--gold" data-magnetic>Discover the club</a>
+    </div>
+  </section>
+
+</main>
+
+<!-- ░░ FOOTER ░░ -->
+<footer class="footer">
+  <div class="footer__top">
+    <div class="footer__brand">
+      <img src="../assets/hotel/Logo-negativ.webp" alt="4U Hotel" />
+      <p>An oasis of relaxation in the heart of Carinthia, partner of the Wellcum club.</p>
+    </div>
+    <div class="footer__cols">
+      <div>
+        <h5>Hotel</h5>
+        <a href="#camere">Rooms</a><a href="#servizi">Services</a><a href="#contatti">Contact</a><a href="https://4uhotel.at/buchen/" target="_blank" rel="noopener">Book</a>
+      </div>
+      <div>
+        <h5>Network</h5>
+        <a href="index.html">Wellcum Club</a><a href="index.html#spa">Spa &amp; Wellness</a><a href="index.html#prezzi">Club prices</a>
+      </div>
+      <div>
+        <h5>Contact</h5>
+        <a href="tel:+43425520002">+43 4255 20002</a><a href="mailto:reception@4uhotel.at">reception@4uhotel.at</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer__bottom">
+    <span>© <span id="year">2026</span> 4U HOTEL — KLAGENFURT</span>
+    <div class="footer__legal"><a href="#">Legal notice</a><a href="#">Privacy</a><a href="#">Cookie</a></div>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+</body>
+</html>

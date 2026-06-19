@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wellcum — Men's Spa &amp; Lifestyle Club · Austria</title>
+<meta name="description" content="Austria's largest and most renowned FKK club. 7,000 m² of spa, wellness, bar &amp; restaurant, events and hospitality, just 6 km from the Italian border." />
+<link rel="icon" type="image/png" href="../assets/LogoWebpage-1.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@300;400;500;600&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+<!-- ░░ FILM GRAIN OVERLAY ░░ -->
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ░░ SCROLL PROGRESS ░░ -->
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<!-- ░░ CUSTOM CURSOR ░░ -->
+<div class="cursor" aria-hidden="true"></div>
+<div class="cursor-dot" aria-hidden="true"></div>
+
+<!-- ░░ AGE GATE ░░ -->
+<div class="agegate" id="agegate" role="dialog" aria-modal="true" aria-labelledby="age-title">
+  <div class="agegate__inner">
+    <img src="../assets/LogoWebpage-1.png" alt="Wellcum" class="agegate__logo" />
+    <p class="eyebrow">Men's Spa &amp; Lifestyle Club · Austria</p>
+    <h2 id="age-title" class="agegate__title">Are you of legal age?</h2>
+    <p class="agegate__text">This site contains content reserved for an adult audience. To enter you must be at least <strong>18 years old</strong>.</p>
+    <div class="agegate__actions">
+      <button class="btn btn--gold" id="age-yes" data-magnetic>I am 18 — Enter</button>
+      <a class="btn btn--ghost" href="https://www.google.com" id="age-no">Exit</a>
+    </div>
+  </div>
+</div>
+
+<!-- ░░ PRELOADER ░░ -->
+<div class="preloader" id="preloader" aria-hidden="true">
+  <div class="preloader__mark">W</div>
+  <div class="preloader__bar"><span></span></div>
+</div>
+
+<!-- ░░ NAV ░░ -->
+<header class="nav" id="nav">
+  <a href="#top" class="nav__logo" aria-label="Wellcum — Home">
+    <img src="../assets/LogoWebpage-1.png" alt="Wellcum" />
+  </a>
+  <nav class="nav__links" id="navLinks">
+    <a href="#club">The Club</a>
+    <a href="#ragazze">Girls</a>
+    <a href="#spa">Spa</a>
+    <a href="#bar">Bar</a>
+    <a href="#vip">VIP</a>
+    <a href="#eventi">Events</a>
+    <a href="hotel.html">Hotel</a>
+    <a href="#prezzi">Prices</a>
+    <a href="#faq">FAQ</a>
+    <a href="#contatti">Contact</a>
+  </nav>
+  <div class="nav__right">
+    <div class="nav__lang" aria-label="Lingua">
+      <a href="../index.html">IT</a><span>/</span><a class="is-active" href="../en/index.html">EN</a><span>/</span><a href="../de/index.html">DE</a>
+    </div>
+    <a href="hotel.html#prenota" class="btn btn--gold btn--sm" data-magnetic>Book</a>
+    <button class="nav__burger" id="burger" aria-label="Menu" aria-expanded="false"><span></span><span></span></button>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ░░ HERO ░░ -->
+  <section class="hero" id="hero">
+    <video class="hero__video" id="heroVideo" autoplay muted loop playsinline preload="auto"
+           poster="../assets/foto-3.jpg" data-mobile="https://vstr.wellcum.at/HomepageVideoMobile.mp4">
+      <source src="https://vstr.wellcum.at/HomepageVideo.mp4" type="video/mp4" />
+    </video>
+    <div class="hero__veil" aria-hidden="true"></div>
+    <div class="hero__content">
+      <p class="eyebrow reveal" data-reveal>Men's Spa &amp; Lifestyle Club · Austria</p>
+      <h1 class="hero__title">
+        <span class="line" data-reveal><span>Welcome to the</span></span>
+        <span class="line" data-reveal><span>Realm <em>of</em> Pleasure</span></span>
+      </h1>
+      <p class="hero__sub reveal" data-reveal>Austria's largest and most renowned FKK club. Across 7,000&nbsp;m², a world of spa, wellness, fine taste and hospitality — just 6&nbsp;km from the Italian border.</p>
+      <div class="hero__cta reveal" data-reveal>
+        <a href="#club" class="btn btn--gold" data-magnetic>Discover the club</a>
+        <a href="#prezzi" class="btn btn--ghost" data-magnetic>Prices &amp; Hours</a>
+      </div>
+    </div>
+    <div class="hero__stats" data-reveal>
+      <div class="stat"><span class="stat__num" data-count="7000" data-suffix="">0</span><span class="stat__label">m² of space</span></div>
+      <div class="stat"><span class="stat__num" data-count="43" data-suffix="">0</span><span class="stat__label">hotel rooms</span></div>
+      <div class="stat"><span class="stat__num" data-count="60" data-suffix="+">0</span><span class="stat__label">staff members</span></div>
+      <div class="stat"><span class="stat__num" data-count="364" data-suffix="">0</span><span class="stat__label">days a year</span></div>
+    </div>
+    <a class="hero__scroll" href="#club" aria-label="Scroll"><span></span>scroll</a>
+  </section>
+
+  <!-- ░░ MARQUEE ░░ -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee__track">
+      <span>Wellness ✦ Pleasure ✦ Relaxation ✦ Exclusivity ✦ Wellness ✦ Pleasure ✦ Relaxation ✦ Exclusivity ✦&nbsp;</span>
+      <span>Wellness ✦ Pleasure ✦ Relaxation ✦ Exclusivity ✦ Wellness ✦ Pleasure ✦ Relaxation ✦ Exclusivity ✦&nbsp;</span>
+    </div>
+  </div>
+
+  <!-- ░░ CLUB & FILOSOFIA ░░ -->
+  <section class="section club" id="club">
+    <div class="section__head">
+      <p class="eyebrow" data-reveal>01 — Club &amp; Philosophy</p>
+      <h2 class="section__title" data-reveal>Wellcum, a unique <em>sensory</em> experience</h2>
+    </div>
+    <div class="club__grid">
+      <div class="club__lead" data-reveal>
+        <p>Wellcum is Austria's largest and most renowned FKK club: across 7,000&nbsp;m² it brings together under one roof a world of FKK experiences, spa, bar/restaurant and hotel. Located just 6&nbsp;km from the Italian border, it attracts an international audience — particularly from Italy, Slovenia and Austria.</p>
+        <p>The modern facility with 43 hotel rooms offers maximum privacy, supported by a dedicated team of more than 60 staff members who communicate in several languages (DE, IT, EN, SL, RU, UA, ES).</p>
+      </div>
+      <figure class="club__media" data-reveal data-parallax>
+        <img src="../assets/foto-4-1.jpg" alt="Entrance of the Wellcum club" loading="lazy" />
+        <figcaption>Hohenthurn · Carinthia</figcaption>
+      </figure>
+    </div>
+
+    <!-- 9 VANTAGGI -->
+    <div class="why">
+      <p class="eyebrow why__eyebrow" data-reveal>Why Wellcum? · Your advantages</p>
+      <div class="why__grid">
+        <article class="adv" data-reveal><span class="adv__n">01</span><h3>Health</h3><p>Valid health certificates and medical checks every six weeks.</p></article>
+        <article class="adv" data-reveal><span class="adv__n">02</span><h3>Hygiene</h3><p>The highest hygiene standards, 364 days a year.</p></article>
+        <article class="adv" data-reveal><span class="adv__n">03</span><h3>Location</h3><p>5 minutes from the Arnoldstein exit of the A2.</p></article>
+        <article class="adv" data-reveal><span class="adv__n">04</span><h3>Discretion</h3><p>Secluded location with hidden parking.</p></article>
+        <article class="adv" data-reveal><span class="adv__n">05</span><h3>Overnight stay</h3><p>Connected hotel, no need to drive anywhere.</p></article>
+        <article class="adv" data-reveal><span class="adv__n">06</span><h3>Flexibility</h3><p>An expert staff, dedicated to guest satisfaction.</p></article>
+        <article class="adv" data-reveal><span class="adv__n">07</span><h3>Languages</h3><p>IT, EN, DE, ES, FR, SL, HR, RU, TR — we understand you everywhere.</p></article>
+        <article class="adv" data-reveal><span class="adv__n">08</span><h3>Cuisine</h3><p>Fresh, seasonal products from Carinthia and Italy.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ PILASTRI ░░ -->
+  <section class="pillars" id="pillars" aria-label="The four worlds">
+    <article class="pillar" data-reveal>
+      <span class="pillar__idx">I</span>
+      <h3>Wellness</h3>
+      <p>Sensuality and wellness like you've never experienced before. Saunas, heated pool, relaxation areas and massages.</p>
+      <a href="#spa" class="link-arrow">Discover more</a>
+    </article>
+    <article class="pillar" data-reveal>
+      <span class="pillar__idx">II</span>
+      <h3>Pleasure</h3>
+      <p>Culinary pleasure and an elegant setting: bar &amp; restaurant with cocktails, buffet and show cooking.</p>
+      <a href="#bar" class="link-arrow">Discover more</a>
+    </article>
+    <article class="pillar" data-reveal>
+      <span class="pillar__idx">III</span>
+      <h3>Relaxation</h3>
+      <p>Hotel &amp; rooms through partner 4U Hotel: 43 rooms for maximum privacy.</p>
+      <a href="hotel.html" class="link-arrow">Discover &amp; book</a>
+    </article>
+    <article class="pillar" data-reveal>
+      <span class="pillar__idx">IV</span>
+      <h3>Exclusivity</h3>
+      <p>Themed parties, pole dance, live shows and DJ sets with international performers.</p>
+      <a href="#eventi" class="link-arrow">Discover more</a>
+    </article>
+  </section>
+
+  <!-- ░░ RAGAZZE ░░ -->
+  <section class="section ragazze" id="ragazze">
+    <div class="ragazze__lead">
+      <div>
+        <p class="eyebrow" data-reveal>✦ — Girls</p>
+        <h2 class="section__title" data-reveal>Discover who is <em>here today</em></h2>
+      </div>
+      <p data-reveal>Our international guests welcome you every day. For discretion, the profiles can be viewed privately — on Telegram or directly on site. Find out who's here today, or on the days you've planned your visit.</p>
+    </div>
+    <div class="ragazze__grid" data-reveal>
+      <div class="gcard"><span class="gcard__n">01</span><span class="gcard__tag"><b>•••••</b><span>Here today</span></span></div>
+      <div class="gcard"><span class="gcard__n">02</span><span class="gcard__tag"><b>•••••</b><span>Here today</span></span></div>
+      <div class="gcard"><span class="gcard__n">03</span><span class="gcard__tag"><b>•••••</b><span>Here today</span></span></div>
+      <div class="gcard"><span class="gcard__n">04</span><span class="gcard__tag"><b>•••••</b><span>This week</span></span></div>
+      <div class="gcard"><span class="gcard__n">05</span><span class="gcard__tag"><b>•••••</b><span>Here today</span></span></div>
+      <div class="gcard"><span class="gcard__n">06</span><span class="gcard__tag"><b>•••••</b><span>Here today</span></span></div>
+      <div class="gcard"><span class="gcard__n">07</span><span class="gcard__tag"><b>•••••</b><span>Here today</span></span></div>
+      <div class="gcard"><span class="gcard__n">08</span><span class="gcard__tag"><b>•••••</b><span>This week</span></span></div>
+    </div>
+    <div class="ragazze__cta" data-reveal style="margin-top:36px;display:flex;gap:18px;flex-wrap:wrap;align-items:center;">
+      <a href="https://t.me/wellclubaustria" target="_blank" rel="noopener" class="btn btn--gold" data-magnetic>Profiles on Telegram</a>
+      <span class="ragazze__note">Updated every day · private viewing on site</span>
+    </div>
+  </section>
+
+  <!-- ░░ SPA ░░ -->
+  <section class="section feature feature--spa" id="spa">
+    <div class="feature__media" data-reveal data-parallax>
+      <img src="../assets/foto-3.jpg" alt="Pool and wellness area of the Wellcum" loading="lazy" />
+    </div>
+    <div class="feature__body">
+      <p class="eyebrow" data-reveal>02 — Spa &amp; Wellness</p>
+      <h2 class="section__title" data-reveal>360° Wellness — our <em>Spa</em> for men</h2>
+      <p class="feature__intro" data-reveal>The Wellcum Spa is the ideal place for a relaxing break: saunas, heated pool, relaxation areas and beneficial massages. On arrival you will receive sterilised slippers, a bathrobe and, on request, a safe for your valuables.</p>
+
+      <div class="subfeat" data-reveal>
+        <h4>In the pool, surrounded by fantastic girls</h4>
+        <p>Outdoor pool heated to 30&nbsp;°C all year round — outdoors in summer, among the snow-covered pines in winter. The outdoor area of over 2,800&nbsp;m² invites you to sunbathe and switch off, with a Finnish sauna, terrace and lawn.</p>
+      </div>
+      <div class="subfeat" data-reveal>
+        <h4>First relaxation, then fun</h4>
+        <p>Five saunas await you — including two classic Finnish ones at around 90&nbsp;°C: one in the outdoor area, the other in the exclusive VIP lounge. They boost circulation and detoxify the skin. For the perfect refresh: a dip in the pool!</p>
+      </div>
+      <div class="subfeat" data-reveal>
+        <h4>Put yourself in the hands of our masseuses</h4>
+        <p>Authentic massages performed by professionals, every day from 2:00 pm to 10:00 pm.</p>
+        <ul class="pricelist">
+          <li><span>30 min — back, legs, feet</span><span class="dots"></span><span>on request</span></li>
+          <li><span>60 min — incl. neck, hands, face, head</span><span class="dots"></span><span>on request</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ BAR ░░ -->
+  <section class="section feature feature--bar feature--rev" id="bar">
+    <div class="feature__media" data-reveal data-parallax>
+      <img src="../assets/foto-1.jpg" alt="Bar and restaurant of the Wellcum" loading="lazy" />
+    </div>
+    <div class="feature__body">
+      <p class="eyebrow" data-reveal>03 — Bar &amp; Restaurant</p>
+      <h2 class="section__title" data-reveal>Your palate will be <em>spoiled</em> too</h2>
+      <p class="feature__intro" data-reveal>The bar and restaurant area is the meeting point of the Wellcum — ideal for socialising with guests and girls, even during meals. Included in admission: two alcoholic drinks (Spritz, beer, Radler) and unlimited soft drinks from the dispensers. Fine wines, cocktails and champagne à la carte.</p>
+      <p class="feature__intro" data-reveal>At lunch a hot and cold buffet; in the evening, show cooking right before your eyes. In summer, barbecue evenings on Thursdays and Sundays from 6:00 pm. For groups of at least six people we prepare, on request, exclusive specialities such as scampi or lobster — always fresh from Carinthia.</p>
+      <a href="#contatti" class="link-arrow" data-reveal>Book a table</a>
+    </div>
+  </section>
+
+  <!-- ░░ VIP ░░ -->
+  <section class="vip" id="vip">
+    <div class="vip__bg" style="background-image:url('../assets/foto-3.jpg')" aria-hidden="true"></div>
+    <div class="vip__inner">
+      <p class="eyebrow" data-reveal>04 — VIP Area</p>
+      <h2 class="vip__title" data-reveal>Private room &amp; <em>exclusive service</em></h2>
+      <p class="vip__text" data-reveal>A luxury suite at the partner 4U Hotel: private Finnish sauna, whirlpool tub, exclusive bathroom and room service, with access through a discreet entrance.</p>
+      <div class="vip__price" data-reveal><span>The VIP room can be booked at</span><strong>99 €</strong><span>per hour</span></div>
+    </div>
+  </section>
+
+  <!-- ░░ EVENTI ░░ -->
+  <section class="section eventi" id="eventi">
+    <div class="eventi__head">
+      <p class="eyebrow" data-reveal>05 — Events</p>
+      <h2 class="section__title" data-reveal>FKK Saunaclub: at least <em>one party a month</em></h2>
+      <p class="eventi__lead" data-reveal>Every month the Wellcum lights up: themed parties, pole dance, live shows and DJ sets with international entertainers. A calendar designed to turn the evening into a memorable experience.</p>
+      <a href="https://wellcum.at/eventi/" target="_blank" rel="noopener" class="btn btn--gold" data-magnetic data-reveal>Events calendar</a>
+    </div>
+    <ul class="eventi__tags" data-reveal>
+      <li>Themed parties</li><li>Pole dance</li><li>Live shows</li><li>DJ sets</li><li>International performers</li>
+    </ul>
+  </section>
+
+  <!-- ░░ PREZZI & ORARI ░░ -->
+  <section class="section prezzi" id="prezzi">
+    <div class="section__head">
+      <p class="eyebrow" data-reveal>06 — Prices &amp; Hours</p>
+      <h2 class="section__title" data-reveal>One single admission, <em>all included</em></h2>
+    </div>
+    <div class="prezzi__grid">
+      <div class="ticket" data-reveal>
+        <div class="ticket__top">
+          <span class="ticket__kicker">Daily admission</span>
+          <span class="ticket__price">90&nbsp;€<small>/ person</small></span>
+        </div>
+        <ul class="ticket__list">
+          <li>Access to the club and the entire wellness area</li>
+          <li>Lunch and dinner at the buffet restaurant</li>
+          <li>Unlimited soft drinks (self-service)</li>
+          <li>Two Spritz, beer or radler (0.33 l)</li>
+          <li>Bathrobe, towels and slippers included</li>
+        </ul>
+        <a href="#contatti" class="btn btn--gold" data-magnetic>Come visit us</a>
+      </div>
+      <div class="prezzi__side">
+        <div class="hours" data-reveal>
+          <h4>Opening hours</h4>
+          <ul>
+            <li><span>Mon – Thu &amp; Sun</span><span>11:00 – 01:00</span></li>
+            <li><span>Fri – Sat</span><span>11:00 – 03:00</span></li>
+          </ul>
+          <p class="hours__note">Open 364 days a year — closed only on 24 December.</p>
+        </div>
+        <div class="extras" data-reveal>
+          <h4>Other services</h4>
+          <ul class="pricelist">
+            <li><span>Hotel · 4U Hotel</span><span class="dots"></span><span>from € 90</span></li>
+            <li><span>VIP room</span><span class="dots"></span><span>€ 99/h</span></li>
+            <li><span>Massage</span><span class="dots"></span><span>on request</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ FAQ ░░ -->
+  <section class="section faq" id="faq">
+    <div class="section__head">
+      <p class="eyebrow" data-reveal>07 — Frequently asked questions</p>
+      <h2 class="section__title" data-reveal>Everything <em>you need to know</em></h2>
+    </div>
+    <div class="faq__list" data-reveal>
+      <details class="qa"><summary>How much does admission to the Wellcum cost?<i></i></summary><div class="qa__a"><p>The admission price is 90 euros.</p></div></details>
+      <details class="qa"><summary>What is included in the admission price?<i></i></summary><div class="qa__a"><p>Use of the SPA and the pool, two drinks of your choice (beer, spritz or radler), unlimited soft drinks from the dispensers and an all-you-can-eat buffet during the restaurant's opening hours.</p></div></details>
+      <details class="qa"><summary>Can I stay overnight at the club?<i></i></summary><div class="qa__a"><p>The club adjoins the partner hotel, which offers 43 rooms. <a href="https://www.4uhotel.at/" target="_blank" rel="noopener">Visit the hotel's website →</a></p></div></details>
+      <details class="qa"><summary>Do I need to bring a bathrobe and pool slippers?<i></i></summary><div class="qa__a"><p>A bathrobe and slippers are provided on arrival. You may still bring your own if you wish.</p></div></details>
+      <details class="qa"><summary>What should I wear under the bathrobe?<i></i></summary><div class="qa__a"><p>You can decide for yourself: nothing or a swimsuit. To access the restaurant, wearing the bathrobe is mandatory.</p></div></details>
+      <details class="qa"><summary>Is the outdoor pool open in winter too?<i></i></summary><div class="qa__a"><p>Yes, the pool is open all year round. In winter the water is heated to 30&nbsp;°C.</p></div></details>
+      <details class="qa"><summary>Can I reach the Wellcum by train?<i></i></summary><div class="qa__a"><p>Yes. The nearest stations are Arnoldstein and Villach, connected to the main stations of Northern Italy.</p></div></details>
+      <details class="qa"><summary>Is there a taxi service from the station?<i></i></summary><div class="qa__a"><p>Several 24-hour taxi services are available.</p></div></details>
+      <details class="qa"><summary>What is the nearest Italian airport?<i></i></summary><div class="qa__a"><p>Venice airport, about two and a half hours by car.</p></div></details>
+      <details class="qa"><summary>What is the nearest Austrian airport?<i></i></summary><div class="qa__a"><p>Klagenfurt airport.</p></div></details>
+      <details class="qa"><summary>How do you get to the club by car?<i></i></summary><div class="qa__a"><p>The fastest route is the motorway from Udine, the A23, which becomes the A2 in Austria. Exits: Tarvisio or Arnoldstein.</p></div></details>
+      <details class="qa"><summary>Are the motorways in Austria toll-paying?<i></i></summary><div class="qa__a"><p>Yes, you need the "Vignette": it costs 9.80 euros and is valid for 10 days across the entire network. By exiting at Tarvisio you avoid the toll and reach the club via the state road.</p></div></details>
+      <details class="qa"><summary>Is the club always open?<i></i></summary><div class="qa__a"><p>Yes, all year round, except for 24 December.</p></div></details>
+      <details class="qa"><summary>What languages are spoken at the reception?<i></i></summary><div class="qa__a"><p>All staff speak Italian, English and German.</p></div></details>
+      <details class="qa"><summary>Can I use my phone in the club?<i></i></summary><div class="qa__a"><p>No, the use of mobile phones is not allowed. They must be left in the hotel room, in the lockers or in the safes.</p></div></details>
+      <details class="qa"><summary>How can I contact the girls?<i></i></summary><div class="qa__a"><p>The girls are guests of the club and self-employed workers. Arrangements are made inside the club; the minimum stay is half an hour.</p></div></details>
+      <details class="qa"><summary>Are electronic payments possible?<i></i></summary><div class="qa__a"><p>Electronic payments are only possible for the bar and hotel services. Self-employed workers can only be paid in cash.</p></div></details>
+      <details class="qa"><summary>Are there medical checks for the workers in Austria?<i></i></summary><div class="qa__a"><p>Medical checks are mandatory and are carried out every six weeks, with a full examination in particular for sexually transmitted diseases.</p></div></details>
+    </div>
+  </section>
+
+  <!-- ░░ CONTATTI ░░ -->
+  <section class="section contatti" id="contatti">
+    <div class="section__head">
+      <p class="eyebrow" data-reveal>08 — Contact &amp; How to reach us</p>
+      <h2 class="section__title" data-reveal>We await you in <em>Carinthia</em></h2>
+    </div>
+    <div class="contatti__grid">
+      <div class="contatti__info" data-reveal>
+        <div class="cinfo">
+          <span class="cinfo__k">Address</span>
+          <span class="cinfo__v">Flussstraße 1<br />9601 Hohenthurn · Austria</span>
+        </div>
+        <div class="cinfo">
+          <span class="cinfo__k">Navigation (GPS)</span>
+          <span class="cinfo__v">Kraftoolstraße 1, 9601 Hohenthurn</span>
+        </div>
+        <div class="cinfo">
+          <span class="cinfo__k">Phone</span>
+          <span class="cinfo__v"><a href="tel:+43425520002">+43 4255 20002</a></span>
+        </div>
+        <div class="cinfo">
+          <span class="cinfo__k">WhatsApp reception</span>
+          <span class="cinfo__v"><a href="https://wa.me/4366475410700" target="_blank" rel="noopener">+43 664 75410700</a></span>
+        </div>
+        <div class="cinfo">
+          <span class="cinfo__k">Email</span>
+          <span class="cinfo__v"><a href="mailto:info@wellcum.at">info@wellcum.at</a></span>
+        </div>
+        <div class="cinfo">
+          <span class="cinfo__k">Airports</span>
+          <span class="cinfo__v">Trieste 115 km · Venice/Treviso 220 km · Klagenfurt (the nearest)</span>
+        </div>
+      </div>
+      <div class="contatti__map" data-reveal>
+        <iframe
+          title="Wellcum map"
+          src="https://www.google.com/maps?q=Flussstrasse%201,%209601%20Hohenthurn,%20Austria&output=embed"
+          loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ░░ BRIDGE → HOTEL ░░ -->
+  <section class="bridge" aria-label="4U Hotel" style="padding-bottom:clamp(40px,6vw,80px);">
+    <div class="bridge__inner" data-reveal>
+      <div class="bridge__txt">
+        <h3>Extend the pleasure — stay at the <em>4U Hotel</em></h3>
+        <p>43 rooms a step away from the club, with private access. Book your room.</p>
+      </div>
+      <a href="hotel.html#prenota" class="btn btn--gold" data-magnetic>Book a room</a>
+    </div>
+  </section>
+
+</main>
+
+<!-- ░░ FOOTER ░░ -->
+<footer class="footer">
+  <div class="footer__top">
+    <div class="footer__brand">
+      <img src="../assets/LogoWebpage-1.png" alt="Wellcum" />
+      <p>Men's Spa &amp; Lifestyle Club — the realm of pleasure, 364 days a year.</p>
+    </div>
+    <div class="footer__cols">
+      <div>
+        <h5>The Club</h5>
+        <a href="#club">Wellcum</a><a href="#spa">Spa &amp; Wellness</a><a href="#bar">Bar &amp; Restaurant</a><a href="#vip">VIP</a><a href="#eventi">Events</a>
+      </div>
+      <div>
+        <h5>Information</h5>
+        <a href="#prezzi">Prices and hours</a><a href="#faq">FAQ</a><a href="#contatti">How to reach us</a><a href="https://www.w-merchandise.com/" target="_blank" rel="noopener">Shop</a><a href="hotel.html">Hotel</a>
+      </div>
+      <div>
+        <h5>Follow us</h5>
+        <div class="footer__social">
+          <a href="https://t.me/wellclubaustria" target="_blank" rel="noopener" aria-label="Telegram">Telegram</a>
+          <a href="https://www.youtube.com/@Wellc_mClub" target="_blank" rel="noopener" aria-label="YouTube">YouTube</a>
+          <a href="https://www.facebook.com/wellcumclubaustria" target="_blank" rel="noopener" aria-label="Facebook">Facebook</a>
+          <a href="https://it.linkedin.com/company/wellcumclub" target="_blank" rel="noopener" aria-label="LinkedIn">LinkedIn</a>
+          <a href="https://www.tiktok.com/@wellcum_official" target="_blank" rel="noopener" aria-label="TikTok">TikTok</a>
+          <a href="https://twitter.com/Wellcumclub" target="_blank" rel="noopener" aria-label="X">X</a>
+          <a href="https://www.instagram.com/wellc_m.official/" target="_blank" rel="noopener" aria-label="Instagram">Instagram</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer__bottom">
+    <span>© <span id="year">2026</span> WELLCUM — SPA FOR MEN</span>
+    <div class="footer__legal">
+      <a href="#">Legal notice</a><a href="#">Privacy</a><a href="#">Cookie</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+</body>
+</html>

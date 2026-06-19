@@ -1,4 +1,14 @@
+# build artifacts & local packages
+offline/
+*.zip
+
+# local tooling
+.claude/
+
+# python / temp
 __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
+assets/**/_up*.png
+.tmp*
