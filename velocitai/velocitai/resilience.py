@@ -372,3 +372,33 @@ class IssuedLedger:
             fh.write(line + "\n")
             fh.flush()
             os.fsync(fh.fileno())
+
+    def prune(self, older_than_ts: float) -> int:
+        """Rimuove le chiavi piu' vecchie di ``older_than_ts`` (manutenzione).
+
+        Limita la crescita illimitata del ledger: una violazione oltre i termini
+        perentori (notifica/pagamento) non puo' piu' essere riemessa, quindi la
+        sua chiave non serve. Il bucket temporale e' gia' nella chiave, percio'
+        non serve storage aggiuntivo. Le chiavi non interpretabili sono conservate
+        (fail-safe: meglio non sanzionare due volte che potare per errore).
+        """
+        if self.window_s <= 0:
+            return 0
+        cutoff = older_than_ts / self.window_s
+        keep = set()
+        for k in self._keys:
+            parts = k.split("|")
+            try:
+                bucket = int(parts[2])
+            except (IndexError, ValueError):
+                keep.add(k)
+                continue
+            if bucket >= cutoff:
+                keep.add(k)
+        removed = len(self._keys) - len(keep)
+        if removed:
+            self._keys = keep
+            atomic_write_text(self.path,
+                              "".join(k + "\n" for k in sorted(self._keys)))
+            log.info("Ledger: potate %d chiavi anteriori a %s", removed, older_than_ts)
+        return removed

@@ -143,6 +143,18 @@ class TestIssuedLedger(unittest.TestCase):
         self.assertEqual(k1, k2)
         self.assertNotEqual(k1, k3)
 
+    def test_prune_bounds_growth(self):
+        led = IssuedLedger(self.path, window_s=2.0)
+        led.add(led.key_for("D", "AB123CD", 100.0))    # vecchia
+        led.add(led.key_for("D", "EF456GH", 10_000.0))  # recente
+        removed = led.prune(older_than_ts=5_000.0)
+        self.assertEqual(removed, 1)
+        self.assertFalse(led.seen(led.key_for("D", "AB123CD", 100.0)))
+        self.assertTrue(led.seen(led.key_for("D", "EF456GH", 10_000.0)))
+        # persistito: ricaricando, la chiave potata resta assente
+        led2 = IssuedLedger(self.path, window_s=2.0)
+        self.assertFalse(led2.seen(led.key_for("D", "AB123CD", 100.0)))
+
 
 class TestAtomicWriteAndFloats(unittest.TestCase):
     def setUp(self):

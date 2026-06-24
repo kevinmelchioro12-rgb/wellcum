@@ -9,6 +9,7 @@ altre lettere. Sono quindi ammesse 22 lettere.
 from __future__ import annotations
 
 import re
+import zlib
 from typing import Dict, List, Optional, Protocol
 
 from .models import PlateReading, Track, BBox
@@ -137,7 +138,6 @@ class SimulatedANPR:
         # PRNG deterministico (LCG) seminato dalla targa. NB: si usa crc32 e non
         # hash() builtin, che per le stringhe e' randomizzato per-processo
         # (PYTHONHASHSEED) e renderebbe il rumore NON riproducibile.
-        import zlib
         seed = zlib.crc32(plate.encode("utf-8")) % (2**31)
         chars = list(plate)
         confus = {"0": "O", "O": "0", "8": "B", "B": "8", "5": "S", "S": "5"}
