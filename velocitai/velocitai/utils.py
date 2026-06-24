@@ -5,9 +5,11 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import math
 import os
+import tempfile
 from datetime import datetime, timezone, timedelta
-from typing import Any, Iterable
+from typing import Any, Iterable, Optional
 
 try:
     from zoneinfo import ZoneInfo
@@ -84,10 +86,53 @@ def hour_of_day(ts: float, tz_offset_hours: float = 1.0) -> int:
     return datetime.fromtimestamp(ts, _tz(tz_offset_hours)).hour
 
 
+def is_finite_number(x: Any) -> bool:
+    """True solo per int/float reali e finiti (no NaN, no +/-inf, no bool/None).
+
+    Le grandezze fisiche (velocita', tempi, coordinate) non possono essere NaN
+    o infinite: un dato simile indica corruzione e non deve mai arrivare al
+    verbale. Questo predicato e' la guardia usata in tutto il sistema.
+    """
+    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
+
+
+def safe_float(x: Any, default: float = 0.0) -> float:
+    """Converte in float finito; ritorna ``default`` se NaN/inf/non numerico."""
+    try:
+        v = float(x)
+    except (TypeError, ValueError):
+        return default
+    return v if math.isfinite(v) else default
+
+
+def atomic_write_text(path: str, text: str, encoding: str = "utf-8") -> None:
+    """Scrittura atomica: scrive su file temporaneo + ``os.replace``.
+
+    Garantisce che un crash a meta' scrittura non lasci mai un file-prova o un
+    verbale troncato/corrotto: il file di destinazione o e' quello vecchio
+    (intatto) o quello nuovo (completo), mai uno stato intermedio.
+    """
+    d = os.path.dirname(path) or "."
+    os.makedirs(d, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=d, prefix=".tmp-", suffix=".part")
+    try:
+        with os.fdopen(fd, "w", encoding=encoding) as f:
+            f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, path)               # rinomina atomica sullo stesso fs
+    except Exception:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
 def write_json(path: str, obj: Any) -> None:
-    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(obj, f, ensure_ascii=False, indent=2, default=str)
+    """Serializza ``obj`` in JSON con scrittura atomica (vedi atomic_write_text)."""
+    text = json.dumps(obj, ensure_ascii=False, indent=2, default=str)
+    atomic_write_text(path, text)
 
 
 def read_json(path: str) -> Any:

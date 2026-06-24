@@ -1,6 +1,8 @@
-# Artefatti runtime (prove e verbali generati)
+# Artefatti runtime (prove, verbali, stato di resilienza)
 data/evidence/
 data/verbali/
+data/deadletter/
+data/issued_ledger.json
 
 # Python
 __pycache__/

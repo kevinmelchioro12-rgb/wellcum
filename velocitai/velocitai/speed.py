@@ -18,7 +18,22 @@ from typing import List, Optional, Tuple
 
 from .geometry import LineGate
 from .models import Track, SpeedMeasurement, SpeedMethod
-from .utils import ms_to_kmh
+from .utils import ms_to_kmh, is_finite_number
+
+
+def _finite_world_points(track: Track) -> list:
+    """Punti del track con coordinate mondo presenti e finite (no NaN/inf).
+
+    Un solo campione corrotto puo' falsare la stima di velocita': viene scartato
+    a monte in modo che dati sporchi non producano mai una contestazione.
+    """
+    return [
+        p for p in track.points
+        if p.world_point is not None
+        and is_finite_number(p.world_point.x)
+        and is_finite_number(p.world_point.y)
+        and is_finite_number(p.timestamp)
+    ]
 
 
 def _linregress(xs: List[float], ys: List[float]) -> Tuple[float, float, float]:
@@ -41,12 +56,14 @@ def _linregress(xs: List[float], ys: List[float]) -> Tuple[float, float, float]:
 
 
 class WorldRegressionEstimator:
-    def __init__(self, min_points: int = 4, min_duration_s: float = 0.15) -> None:
+    def __init__(self, min_points: int = 4, min_duration_s: float = 0.15,
+                 max_speed_kmh: float = 400.0) -> None:
         self.min_points = min_points
         self.min_duration_s = min_duration_s
+        self.max_speed_kmh = max_speed_kmh
 
     def estimate(self, track: Track) -> Optional[SpeedMeasurement]:
-        pts = [p for p in track.points if p.world_point is not None]
+        pts = _finite_world_points(track)
         if len(pts) < self.min_points:
             return None
         ts = [p.timestamp for p in pts]
@@ -56,7 +73,10 @@ class WorldRegressionEstimator:
         ys = [p.world_point.y for p in pts]
         vx, _, r2x = _linregress(ts, xs)
         vy, _, r2y = _linregress(ts, ys)
-        speed_ms = (vx * vx + vy * vy) ** 0.5
+        speed_kmh = ms_to_kmh((vx * vx + vy * vy) ** 0.5)
+        # cap fisico: oltre la soglia la misura e' frutto di rumore -> scartata
+        if not is_finite_number(speed_kmh) or speed_kmh > self.max_speed_kmh:
+            return None
         # distanza = spostamento rettilineo misurato tra primo e ultimo punto
         # mondo (coerente con la prova, non un valore implicato dal modello)
         distance = ((xs[-1] - xs[0]) ** 2 + (ys[-1] - ys[0]) ** 2) ** 0.5
@@ -65,9 +85,11 @@ class WorldRegressionEstimator:
             conf = r2x
         else:
             conf = r2y
+        if not is_finite_number(conf):
+            conf = 0.0
         return SpeedMeasurement(
             track_id=track.track_id,
-            measured_speed_kmh=ms_to_kmh(speed_ms),
+            measured_speed_kmh=speed_kmh,
             method=SpeedMethod.WORLD_REGRESSION,
             t_start=ts[0],
             t_end=ts[-1],
@@ -93,7 +115,7 @@ class LinePairEstimator:
         self.max_speed_kmh = max_speed_kmh
 
     def _crossing_time(self, track: Track, target: float) -> Optional[float]:
-        pts = [p for p in track.points if p.world_point is not None]
+        pts = _finite_world_points(track)
         for prev, curr in zip(pts, pts[1:]):
             yp, yc = prev.world_point.y, curr.world_point.y
             lo, hi = sorted((yp, yc))
@@ -103,16 +125,18 @@ class LinePairEstimator:
         return None
 
     def estimate(self, track: Track) -> Optional[SpeedMeasurement]:
-        pts = [p for p in track.points if p.world_point is not None]
+        pts = _finite_world_points(track)
         if len(pts) < self.min_points:
             return None
+        if not is_finite_number(self.gate.distance_m) or self.gate.distance_m <= 0:
+            return None  # gate non calibrato correttamente
         t_in = self._crossing_time(track, self.gate.entry_y)
         t_out = self._crossing_time(track, self.gate.exit_y)
         if t_in is None or t_out is None or t_in == t_out:
             return None
         dt = abs(t_out - t_in)
-        speed_ms = self.gate.distance_m / dt
-        if ms_to_kmh(speed_ms) > self.max_speed_kmh:
+        speed_kmh = ms_to_kmh(self.gate.distance_m / dt)
+        if not is_finite_number(speed_kmh) or speed_kmh > self.max_speed_kmh:
             return None  # dt non plausibile: misura scartata
         # confidenza: serve almeno un paio di campioni tra i gate; non si
         # penalizzano i veicoli veloci (che per natura ne hanno di meno)
@@ -122,7 +146,7 @@ class LinePairEstimator:
         conf = min(1.0, between / 2.0)
         return SpeedMeasurement(
             track_id=track.track_id,
-            measured_speed_kmh=ms_to_kmh(speed_ms),
+            measured_speed_kmh=speed_kmh,
             method=SpeedMethod.LINE_PAIR,
             t_start=min(t_in, t_out),
             t_end=max(t_in, t_out),

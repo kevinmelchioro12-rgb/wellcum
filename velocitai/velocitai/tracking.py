@@ -33,6 +33,16 @@ class IoUTracker:
     def tracks(self) -> List[Track]:
         return list(self._tracks.values())
 
+    def reset(self) -> None:
+        """Azzera lo stato interno: rielaborare una clip deve ripartire pulito.
+
+        Senza reset, chiamate successive accumulerebbero tracce di clip diverse,
+        falsando conteggi e (in combinazione col ledger) l'idempotenza.
+        """
+        self._tracks.clear()
+        self._archived.clear()
+        self._next_id = 1
+
     def _match(self, det: Detection, used: set) -> int:
         """Trova il miglior track per una detection (IoU max sopra soglia)."""
         best_id = -1

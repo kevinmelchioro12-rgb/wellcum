@@ -50,7 +50,13 @@ dell'**art. 142 del Codice della Strada**.
   9-bis, art. 142 c. 8-bis)**, pagamento in misura ridotta (art. 202: minimo
   edittale o 1/3 del massimo se più favorevole), spese di notifica e **termini
   perentori** (90 gg notifica, 60 gg pagamento).
-- **Catena di custodia della prova**: pacchetto-prova con hash SHA-256.
+- **Catena di custodia della prova**: pacchetto-prova con hash SHA-256, scritture
+  **atomiche** e verifica anti-manomissione (`velocitai doctor`).
+- **Affidabile e auto-riparante** (`resilience.py`): isolamento dei guasti
+  per-veicolo (un errore non perde gli altri verbali), retry con backoff,
+  *circuit breaker*, **coda dead-letter persistente** con ripresa automatica,
+  **ledger idempotente anti doppia-sanzione**, monitor di salute e
+  sanitizzazione numerica (nessun dato NaN/inf raggiunge mai il verbale).
 - **Console operatore web** (dashboard) e **API JSON**, in sola libreria standard.
 - **Backend pluggable**: i backend di produzione (YOLOv8, EasyOCR, OpenCV, PEC)
   si innestano senza toccare l'orchestratore.
@@ -67,7 +73,11 @@ python3 -m velocitai demo --config config/default.yaml --show-verbale 1
 python3 -m velocitai serve --config config/default.yaml --port 8080
 #    -> apri http://127.0.0.1:8080
 
-# 3) Test (34 test, nessuna dipendenza)
+# 3) Auto-diagnosi: config, integrità prove, coda dead-letter (+ ripresa)
+python3 -m velocitai doctor --config config/default.yaml
+python3 -m velocitai doctor --repair
+
+# 4) Test (68 test, nessuna dipendenza)
 python3 -m unittest discover -s tests
 ```
 
@@ -104,13 +114,14 @@ velocitai/
 │   ├── registry.py       # visura intestatario (mock PRA/Motorizzazione)
 │   ├── fines.py          # calcolo sanzione art. 142/202 CdS
 │   ├── notifier.py       # verbale + notifica (PEC simulata)
-│   ├── pipeline.py       # orchestratore
+│   ├── pipeline.py       # orchestratore (isolamento guasti, idempotenza)
+│   ├── resilience.py     # retry, circuit breaker, dead-letter, health, ledger
 │   ├── scenario.py       # mondo sintetico con ground-truth
 │   ├── dashboard.py      # console operatore web
-│   └── cli.py            # interfaccia a riga di comando
+│   └── cli.py            # interfaccia a riga di comando (demo | serve | doctor)
 ├── config/default.yaml   # configurazione postazione
 ├── data/registry/        # registro intestatari di esempio
-├── tests/                # 34 test (unittest)
+├── tests/                # 68 test (unittest)
 ├── examples/             # uso programmatico
 └── docs/                 # conformità legale, architettura, backend, proposta
 ```
@@ -120,6 +131,7 @@ velocitai/
 - [`docs/LEGAL_COMPLIANCE.md`](docs/LEGAL_COMPLIANCE.md) — **percorso per vendere
   alla PA**: omologazione MIT, metrologia legale, GDPR, requisiti del verbale.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — moduli, flusso dati, variante streaming.
+- [`docs/RESILIENCE.md`](docs/RESILIENCE.md) — **affidabilità e auto-riparazione**: scenari di errore, primitivi, `doctor`.
 - [`docs/PRODUCTION_BACKENDS.md`](docs/PRODUCTION_BACKENDS.md) — innesto YOLO/EasyOCR/OpenCV/PEC.
 - [`docs/PROPOSTA_COMMERCIALE.md`](docs/PROPOSTA_COMMERCIALE.md) — scheda prodotto / executive summary.
 

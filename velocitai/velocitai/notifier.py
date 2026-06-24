@@ -16,7 +16,8 @@ from typing import Optional
 
 from .config import Config
 from .models import Verbale
-from .utils import format_timestamp, write_json, get_logger
+from .utils import format_timestamp, write_json, atomic_write_text, get_logger
+from .resilience import retry, DeadLetterQueue, HealthMonitor, guard
 
 log = get_logger(__name__)
 
@@ -99,29 +100,55 @@ RICORSI
 
 
 class Notifier:
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Config,
+                 dead_letter: Optional[DeadLetterQueue] = None,
+                 monitor: Optional[HealthMonitor] = None,
+                 max_attempts: int = 3) -> None:
         self.config = config
         self.output_dir = config.notifier.output_dir
+        self.dead_letter = dead_letter
+        self.monitor = monitor
+        self.max_attempts = max_attempts
 
     def notify(self, verbale: Verbale) -> dict:
-        os.makedirs(self.output_dir, exist_ok=True)
+        # 1) Il verbale viene SEMPRE scritto su disco (atto legale) in modo
+        #    atomico, anche se la notifica esterna fallira'.
         text = render_verbale_text(verbale, self.config)
         base = os.path.join(self.output_dir, verbale.protocol_number)
         txt_path = base + ".txt"
-        with open(txt_path, "w", encoding="utf-8") as f:
-            f.write(text)
         json_path = base + ".json"
+        atomic_write_text(txt_path, text)
         write_json(json_path, verbale.to_dict())
 
         mode = self.config.notifier.mode
         recipient = verbale.owner.pec_email if (verbale.owner and verbale.owner.pec_email) else None
+
+        # 2) La notifica esterna e' "best effort": fallimenti transitori vengono
+        #    ritentati con backoff; un fallimento definitivo finisce nella coda
+        #    dead-letter per la ripresa automatica, senza perdere il verbale.
         status = "WRITTEN"
         if mode == "simulated":
             status = "SIMULATED_DISPATCH"
             log.info("Verbale %s -> notifica simulata a %s",
                      verbale.protocol_number, recipient or "intestatario sconosciuto")
-        elif mode == "pec":  # pragma: no cover
-            status = self._send_pec(verbale, text, recipient)
+        elif mode in ("pec", "email"):
+            res = guard(
+                lambda: retry(
+                    lambda: self._send_pec(verbale, text, recipient),
+                    attempts=self.max_attempts, base_delay=0.0,
+                    label=f"notifica {verbale.protocol_number}"),
+                component="notifier", monitor=self.monitor)
+            if res.ok:
+                status = "DISPATCH"
+            else:
+                status = "DEAD_LETTER"
+                if self.dead_letter is not None:
+                    self.dead_letter.add(
+                        "notification", verbale.protocol_number,
+                        {"protocol_number": verbale.protocol_number,
+                         "recipient": recipient, "txt_path": txt_path,
+                         "json_path": json_path},
+                        error=res.error or "")
 
         verbale.status = "NOTIFIED" if status.endswith("DISPATCH") else verbale.status
         return {

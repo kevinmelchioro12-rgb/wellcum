@@ -17,9 +17,26 @@ from typing import List, Optional
 
 from .models import EvidencePackage, Track, PlateReading
 from .scenario import SimFrame
-from .utils import write_json, sha256_of_files, get_logger
+from .utils import write_json, sha256_of_files, atomic_write_text, get_logger
 
 log = get_logger(__name__)
+
+
+def verify_evidence(evidence: EvidencePackage) -> bool:
+    """Verifica la catena di custodia: ricalcola l'hash dei file e lo confronta.
+
+    Ritorna ``True`` se la prova e' integra. Usata dal self-check operativo per
+    individuare prove mancanti, troncate o manomesse prima di portarle in
+    giudizio.
+    """
+    if not evidence or not evidence.clip_path or not evidence.sha256:
+        return False
+    files = [evidence.clip_path]
+    if evidence.plate_crop_path:
+        files.append(evidence.plate_crop_path)
+    if not all(os.path.exists(p) for p in files):
+        return False
+    return sha256_of_files(files) == evidence.sha256
 
 
 class SimulatedRecorder:
@@ -65,17 +82,16 @@ class SimulatedRecorder:
         plate_crop_path = None
         if plate is not None:
             plate_crop_path = os.path.join(out, "plate.txt")
-            with open(plate_crop_path, "w", encoding="utf-8") as fh:
-                fh.write(plate.text + "\n")
+            atomic_write_text(plate_crop_path, plate.text + "\n")
 
         # L'hash di integrita' e' calcolato sui file della prova e salvato in un
         # file SEPARATO: incorporarlo nel manifest lo renderebbe non verificabile
         # (l'hash cambierebbe il contenuto che esso stesso certifica).
         files = [clip_path] + ([plate_crop_path] if plate_crop_path else [])
         digest = sha256_of_files(files)
-        with open(os.path.join(out, "evidence.sha256"), "w", encoding="utf-8") as fh:
-            for fpath in sorted(files):
-                fh.write(f"{digest}  {os.path.basename(fpath)}\n")
+        atomic_write_text(
+            os.path.join(out, "evidence.sha256"),
+            "".join(f"{digest}  {os.path.basename(p)}\n" for p in sorted(files)))
 
         return EvidencePackage(
             clip_path=clip_path,

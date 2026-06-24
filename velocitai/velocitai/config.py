@@ -11,7 +11,7 @@ verificati/aggiornati con l'ufficio legale prima della messa in esercizio.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field, asdict, fields as dc_fields
 from typing import Dict, List, Optional, Tuple, Any
 
 try:
@@ -19,6 +19,10 @@ try:
     _HAS_YAML = True
 except Exception:  # pragma: no cover
     _HAS_YAML = False
+
+
+class ConfigError(ValueError):
+    """Configurazione non valida: blocca l'avvio prima di emettere atti errati."""
 
 
 @dataclass
@@ -177,8 +181,13 @@ def _merge(base: Any, override: Any) -> Any:
 
 def _build_brackets(raw: List[Dict[str, Any]]) -> List[SpeedBracket]:
     out = []
-    for b in raw:
-        susp = b.get("suspension_months", [0, 0])
+    for i, b in enumerate(raw):
+        if not isinstance(b, dict):
+            raise ConfigError(f"sanction.brackets[{i}] deve essere una mappa, non {type(b).__name__}")
+        for req in ("name", "articolo", "over_min_kmh", "amount_min_eur", "amount_max_eur"):
+            if req not in b:
+                raise ConfigError(f"sanction.brackets[{i}] manca il campo obbligatorio '{req}'")
+        susp = b.get("suspension_months", [0, 0]) or [0, 0]
         out.append(SpeedBracket(
             name=b["name"], articolo=b["articolo"],
             over_min_kmh=b["over_min_kmh"], over_max_kmh=b.get("over_max_kmh"),
@@ -190,35 +199,122 @@ def _build_brackets(raw: List[Dict[str, Any]]) -> List[SpeedBracket]:
     return out
 
 
-def load_config(path: Optional[str] = None) -> Config:
-    """Carica la configurazione da YAML (se fornito) sovrascrivendo i default."""
+def _known(cls, d: Dict[str, Any]) -> Dict[str, Any]:
+    """Filtra le chiavi non riconosciute da un dataclass.
+
+    Un refuso nello YAML (es. ``speed_limit`` invece di ``speed_limit_kmh``) non
+    deve far crashare il caricamento con un ``TypeError`` criptico: la chiave
+    ignota viene scartata e segnalata, e il resto della config viene applicato.
+    """
+    if not isinstance(d, dict):
+        return {}
+    allowed = {f.name for f in dc_fields(cls)}
+    out: Dict[str, Any] = {}
+    unknown: List[str] = []
+    for k, v in d.items():
+        if k in allowed:
+            out[k] = v
+        else:
+            unknown.append(k)
+    if unknown:
+        from .utils import get_logger
+        get_logger(__name__).warning("Config: chiavi ignote in %s ignorate: %s",
+                                     cls.__name__, ", ".join(unknown))
+    return out
+
+
+def validate_config(cfg: Config) -> List[str]:
+    """Verifica la coerenza dei parametri; ritorna l'elenco degli errori critici.
+
+    Un elenco vuoto significa configurazione valida. Copre i casi che renderebbero
+    invalido un verbale: importi/soglie negative, fasce incoerenti o sovrapposte,
+    ore della finestra notturna fuori range, limite o tolleranza assurdi.
+    """
+    e: List[str] = []
+    s = cfg.sanction
+    if not (0 <= s.tolerance_percent <= 100):
+        e.append(f"sanction.tolerance_percent fuori range [0,100]: {s.tolerance_percent}")
+    if s.tolerance_min_kmh < 0:
+        e.append(f"sanction.tolerance_min_kmh negativo: {s.tolerance_min_kmh}")
+    if not (0.0 <= s.early_payment_discount < 1.0):
+        e.append(f"sanction.early_payment_discount fuori range [0,1): {s.early_payment_discount}")
+    if not (0 <= s.night_start_hour <= 23) or not (0 <= s.night_end_hour <= 23):
+        e.append("sanction.night_start_hour/night_end_hour devono essere in [0,23]")
+    for d in ("notification_deadline_days", "payment_deadline_days", "early_payment_days"):
+        if getattr(s, d) <= 0:
+            e.append(f"sanction.{d} deve essere positivo")
+    if s.notification_costs_eur < 0:
+        e.append("sanction.notification_costs_eur negativo")
+    if not s.brackets:
+        e.append("sanction.brackets vuoto: impossibile classificare le violazioni")
+    prev_max = 0.0
+    for b in s.brackets:
+        if b.amount_min_eur < 0 or b.amount_max_eur < 0:
+            e.append(f"fascia '{b.name}': importi negativi")
+        if b.amount_min_eur > b.amount_max_eur:
+            e.append(f"fascia '{b.name}': minimo ({b.amount_min_eur}) > massimo ({b.amount_max_eur})")
+        if b.over_max_kmh is not None and b.over_min_kmh >= b.over_max_kmh:
+            e.append(f"fascia '{b.name}': over_min >= over_max")
+        if b.points_deducted < 0:
+            e.append(f"fascia '{b.name}': punti negativi")
+        if b.suspension_months[0] > b.suspension_months[1]:
+            e.append(f"fascia '{b.name}': sospensione min > max")
+        if b.over_min_kmh < prev_max:
+            e.append(f"fascia '{b.name}': sovrapposta alla precedente (over_min < {prev_max})")
+        prev_max = b.over_max_kmh if b.over_max_kmh is not None else b.over_min_kmh
+    if cfg.location.speed_limit_kmh <= 0:
+        e.append(f"location.speed_limit_kmh deve essere positivo: {cfg.location.speed_limit_kmh}")
+    if cfg.speed.method not in ("line_pair", "world_regression"):
+        e.append(f"speed.method sconosciuto: {cfg.speed.method}")
+    if cfg.speed.min_track_points < 2:
+        e.append("speed.min_track_points deve essere >= 2")
+    return e
+
+
+def load_config(path: Optional[str] = None, strict: bool = True) -> Config:
+    """Carica la configurazione da YAML (se fornito) sovrascrivendo i default.
+
+    Con ``strict=True`` (default) una configurazione incoerente solleva
+    :class:`ConfigError` PRIMA di poter emettere un verbale invalido.
+    """
     cfg = Config()
-    if not path:
-        return cfg
-    if not _HAS_YAML:  # pragma: no cover
-        raise RuntimeError("PyYAML non disponibile: impossibile leggere %s" % path)
-    with open(path, "r", encoding="utf-8") as f:
-        raw = yaml.safe_load(f) or {}
+    if path:
+        if not _HAS_YAML:  # pragma: no cover
+            raise RuntimeError("PyYAML non disponibile: impossibile leggere %s" % path)
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                raw = yaml.safe_load(f) or {}
+        except FileNotFoundError as exc:
+            raise ConfigError(f"File di configurazione non trovato: {path}") from exc
+        except yaml.YAMLError as exc:  # pragma: no cover - dipende da PyYAML
+            raise ConfigError(f"YAML non valido in {path}: {exc}") from exc
+        if not isinstance(raw, dict):
+            raise ConfigError(f"La radice di {path} deve essere una mappa YAML")
 
-    base = cfg.to_dict()
-    merged = _merge(base, raw)
+        base = cfg.to_dict()
+        merged = _merge(base, raw)
 
-    # Ricostruzione dei dataclass annidati
-    sanction_raw = merged.get("sanction", {})
-    brackets_raw = sanction_raw.get("brackets")
-    sanction = SanctionConfig(**{k: v for k, v in sanction_raw.items() if k != "brackets"})
-    if brackets_raw:
-        sanction.brackets = _build_brackets(brackets_raw)
+        sanction_raw = merged.get("sanction", {}) or {}
+        brackets_raw = sanction_raw.get("brackets")
+        sanction = SanctionConfig(**_known(
+            SanctionConfig, {k: v for k, v in sanction_raw.items() if k != "brackets"}))
+        if brackets_raw:
+            sanction.brackets = _build_brackets(brackets_raw)
 
-    return Config(
-        device=DeviceConfig(**merged.get("device", {})),
-        location=LocationConfig(**merged.get("location", {})),
-        calibration=CalibrationConfig(**merged.get("calibration", {})),
-        speed=SpeedConfig(**merged.get("speed", {})),
-        anpr=ANPRConfig(**merged.get("anpr", {})),
-        recorder=RecorderConfig(**merged.get("recorder", {})),
-        notifier=NotifierConfig(**merged.get("notifier", {})),
-        sanction=sanction,
-        registry_path=merged.get("registry_path", cfg.registry_path),
-        tz_offset_hours=merged.get("tz_offset_hours", cfg.tz_offset_hours),
-    )
+        cfg = Config(
+            device=DeviceConfig(**_known(DeviceConfig, merged.get("device", {}))),
+            location=LocationConfig(**_known(LocationConfig, merged.get("location", {}))),
+            calibration=CalibrationConfig(**_known(CalibrationConfig, merged.get("calibration", {}))),
+            speed=SpeedConfig(**_known(SpeedConfig, merged.get("speed", {}))),
+            anpr=ANPRConfig(**_known(ANPRConfig, merged.get("anpr", {}))),
+            recorder=RecorderConfig(**_known(RecorderConfig, merged.get("recorder", {}))),
+            notifier=NotifierConfig(**_known(NotifierConfig, merged.get("notifier", {}))),
+            sanction=sanction,
+            registry_path=merged.get("registry_path", cfg.registry_path),
+            tz_offset_hours=merged.get("tz_offset_hours", cfg.tz_offset_hours),
+        )
+
+    errors = validate_config(cfg)
+    if errors and strict:
+        raise ConfigError("Configurazione non valida:\n  - " + "\n  - ".join(errors))
+    return cfg

@@ -15,7 +15,9 @@ from typing import Dict, Optional
 
 from .anpr import normalize_plate
 from .models import OwnerRecord
-from .utils import read_json
+from .utils import read_json, get_logger
+
+log = get_logger(__name__)
 
 
 class OwnerRegistry:
@@ -25,9 +27,19 @@ class OwnerRegistry:
     @classmethod
     def from_json(cls, path: str) -> "OwnerRegistry":
         raw = read_json(path)
+        if not isinstance(raw, list):
+            raise ValueError(f"Registro {path}: la radice deve essere una lista")
         records: Dict[str, OwnerRecord] = {}
-        for item in raw:
+        for i, item in enumerate(raw):
+            # un record malformato non deve invalidare l'intero registro:
+            # viene saltato e segnalato (gli altri intestatari restano usabili)
+            if not isinstance(item, dict) or not item.get("plate"):
+                log.warning("Registro %s: record %d senza 'plate' valida, saltato", path, i)
+                continue
             plate = normalize_plate(item["plate"])
+            if not plate:
+                log.warning("Registro %s: record %d con targa vuota, saltato", path, i)
+                continue
             records[plate] = OwnerRecord(
                 plate=plate,
                 full_name=item.get("full_name", ""),

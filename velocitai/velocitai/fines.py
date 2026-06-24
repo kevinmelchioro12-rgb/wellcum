@@ -22,21 +22,27 @@ from typing import Optional
 
 from .config import SanctionConfig, SpeedBracket
 from .models import Violation, OwnerRecord, Sanction, Verbale
-from .utils import hour_of_day
+from .utils import hour_of_day, is_finite_number
 
 SECONDS_PER_DAY = 86400.0
 
 
 def apply_tolerance(measured_kmh: float, cfg: SanctionConfig) -> float:
     """Velocita' contestabile = misurata - max(percentuale, minimo assoluto)."""
+    if not is_finite_number(measured_kmh) or measured_kmh <= 0:
+        return 0.0
     abatement = max(measured_kmh * cfg.tolerance_percent / 100.0,
                     cfg.tolerance_min_kmh)
     return max(0.0, measured_kmh - abatement)
 
 
 def classify(overspeed_kmh: float, cfg: SanctionConfig) -> Optional[SpeedBracket]:
-    """Restituisce la fascia applicabile, o ``None`` se non c'e' superamento."""
-    if overspeed_kmh <= 0:
+    """Restituisce la fascia applicabile, o ``None`` se non c'e' superamento.
+
+    Un valore non finito (NaN/inf) NON viene mai classificato: restituisce
+    ``None`` per non emettere mai una sanzione su un dato corrotto.
+    """
+    if not is_finite_number(overspeed_kmh) or overspeed_kmh <= 0:
         return None
     for b in cfg.brackets:
         within_upper = b.over_max_kmh is None or overspeed_kmh <= b.over_max_kmh

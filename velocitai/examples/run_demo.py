@@ -7,7 +7,14 @@ verbale generato. In produzione si sostituisce ``default_scenario().frames()``
 con un flusso di fotogrammi reali e i backend simulati con quelli ML.
 """
 
-from velocitai import (
+import os
+import sys
+
+# Rende l'esempio eseguibile standalone (``python3 examples/run_demo.py``) senza
+# dover impostare PYTHONPATH: aggiunge la radice del progetto al path.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from velocitai import (  # noqa: E402
     Config, build_simulated_pipeline, default_scenario, render_verbale_text,
 )
 
