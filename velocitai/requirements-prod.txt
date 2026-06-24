@@ -1,0 +1,10 @@
+# Dipendenze dei backend di PRODUZIONE (visione artificiale reale).
+# Non necessarie per la demo/CI: il core usa backend simulati.
+-r requirements.txt
+numpy>=1.21
+opencv-python-headless>=4.7
+ultralytics>=8.0        # YOLOv8 - rilevamento veicoli
+easyocr>=1.7            # OCR riconoscimento targhe
+reportlab>=3.6         # generazione verbale in PDF
+fastapi>=0.100
+uvicorn>=0.23

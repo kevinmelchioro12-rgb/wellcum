@@ -1,0 +1,16 @@
+# Artefatti runtime (prove e verbali generati)
+data/evidence/
+data/verbali/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Modelli ML di produzione (pesanti, fuori dal repo)
+*.pt
+*.onnx
+*.weights

@@ -1,0 +1,92 @@
+# Configurazione di esempio per una postazione VelociTAI.
+# Tutti gli importi/parametri legali sono modificabili: vanno verificati con
+# l'ufficio legale e aggiornati agli importi edittali vigenti (Art.195 CdS).
+
+device:
+  device_id: "VELOCITAI-MI-0001"
+  homologation_number: "OMOL-DA-DEFINIRE"     # numero decreto di approvazione MIT
+  last_calibration_date: "2026-01-15"          # taratura periodica obbligatoria
+  operator_authority: "Comando Polizia Locale - Comune di Milano"
+  operator_fiscal_code: "01199250158"
+
+location:
+  road_name: "Viale Monza km 4+200"
+  municipality: "Milano"
+  province: "MI"
+  latitude: 45.5120
+  longitude: 9.2160
+  direction: "carreggiata Nord (centro -> periferia)"
+  speed_limit_kmh: 50.0
+  urban_area: true
+
+speed:
+  method: "line_pair"          # line_pair | world_regression
+  min_track_points: 4
+  min_duration_s: 0.15
+  min_confidence: 0.6
+
+anpr:
+  min_confidence: 0.55
+  require_valid_format: true
+  country: "IT"
+
+recorder:
+  output_dir: "data/evidence"
+  pre_event_frames: 25
+  post_event_frames: 25
+  fps: 25.0
+  save_plate_crop: true
+
+notifier:
+  mode: "simulated"            # simulated | pec | email | file
+  sender: "comando.pl@comune.milano.it"
+  output_dir: "data/verbali"
+
+sanction:
+  tolerance_percent: 5.0
+  tolerance_min_kmh: 5.0
+  night_surcharge_factor: 0.3333333
+  night_start_hour: 22
+  night_end_hour: 7
+  early_payment_discount: 0.30
+  early_payment_days: 5
+  notification_deadline_days: 90
+  payment_deadline_days: 60
+  notification_costs_eur: 16.50
+  # Le fasce ereditano i default di codice se omesse; qui esplicitate per chiarezza.
+  brackets:
+    - name: "comma 7"
+      articolo: "Art. 142 comma 7 CdS"
+      over_min_kmh: 0.0
+      over_max_kmh: 10.0
+      amount_min_eur: 42.0
+      amount_max_eur: 173.0
+      points_deducted: 0
+      suspension_months: [0, 0]
+    - name: "comma 8"
+      articolo: "Art. 142 comma 8 CdS"
+      over_min_kmh: 10.0
+      over_max_kmh: 40.0
+      amount_min_eur: 173.0
+      amount_max_eur: 695.0
+      points_deducted: 3
+      suspension_months: [0, 0]
+    - name: "comma 9"
+      articolo: "Art. 142 comma 9 CdS"
+      over_min_kmh: 40.0
+      over_max_kmh: 60.0
+      amount_min_eur: 543.0
+      amount_max_eur: 2170.0
+      points_deducted: 6
+      suspension_months: [1, 3]
+    - name: "comma 9-bis"
+      articolo: "Art. 142 comma 9-bis CdS"
+      over_min_kmh: 60.0
+      over_max_kmh: null
+      amount_min_eur: 845.0
+      amount_max_eur: 3382.0
+      points_deducted: 10
+      suspension_months: [6, 12]
+
+registry_path: "data/registry/owners.json"
+tz_offset_hours: 2.0   # CEST (ora legale). Produzione: zoneinfo Europe/Rome.

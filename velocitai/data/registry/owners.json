@@ -1,0 +1,62 @@
+[
+  {
+    "plate": "EB512FG",
+    "full_name": "Mario Rossi",
+    "fiscal_code": "RSSMRA80A01F205X",
+    "address": "Via Garibaldi 12",
+    "municipality": "Milano",
+    "province": "MI",
+    "postal_code": "20121",
+    "vehicle_make": "Fiat",
+    "vehicle_model": "Panda",
+    "pec_email": "mario.rossi@pec.example.it"
+  },
+  {
+    "plate": "FH983KL",
+    "full_name": "Giulia Bianchi",
+    "fiscal_code": "BNCGLI85M41F205Y",
+    "address": "Corso Buenos Aires 45",
+    "municipality": "Milano",
+    "province": "MI",
+    "postal_code": "20124",
+    "vehicle_make": "Volkswagen",
+    "vehicle_model": "Golf",
+    "pec_email": "giulia.bianchi@pec.example.it"
+  },
+  {
+    "plate": "GA419LM",
+    "full_name": "Luca Verdi",
+    "fiscal_code": "VRDLCU78T10F205Z",
+    "address": "Viale Monza 200",
+    "municipality": "Milano",
+    "province": "MI",
+    "postal_code": "20128",
+    "vehicle_make": "BMW",
+    "vehicle_model": "Serie 3",
+    "pec_email": "luca.verdi@pec.example.it"
+  },
+  {
+    "plate": "DZ704XP",
+    "full_name": "Anna Esposito",
+    "fiscal_code": "SPSNNA90E55F839K",
+    "address": "Via Roma 8",
+    "municipality": "Monza",
+    "province": "MB",
+    "postal_code": "20900",
+    "vehicle_make": "Audi",
+    "vehicle_model": "A4",
+    "pec_email": "anna.esposito@pec.example.it"
+  },
+  {
+    "plate": "JB256RT",
+    "full_name": "Paolo Neri",
+    "fiscal_code": "NREPLA82H12F205W",
+    "address": "Via Torino 33",
+    "municipality": "Milano",
+    "province": "MI",
+    "postal_code": "20123",
+    "vehicle_make": "Toyota",
+    "vehicle_model": "Yaris",
+    "pec_email": "paolo.neri@pec.example.it"
+  }
+]
