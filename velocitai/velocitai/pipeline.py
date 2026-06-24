@@ -32,7 +32,7 @@ from .models import (
 )
 from .scenario import SimFrame
 from .resilience import (
-    HealthMonitor, DeadLetterQueue, IssuedLedger, guard,
+    HealthMonitor, DeadLetterQueue, IssuedLedger, CircuitBreaker, guard,
 )
 from .utils import get_logger, format_timestamp, is_finite_number
 
@@ -84,6 +84,12 @@ class EnforcementPipeline:
         self.monitor = monitor or HealthMonitor()
         self.dead_letter = dead_letter
         self.ledger = ledger
+        # Interruttori per backend: dopo una raffica di fallimenti smettono di
+        # invocare il backend guasto (fast-fail) evitando di martellarlo e
+        # accelerando la degradazione controllata.
+        self._cb_anpr = CircuitBreaker(fail_max=5, reset_after=30.0, name="anpr")
+        self._cb_registry = CircuitBreaker(fail_max=5, reset_after=30.0, name="registry")
+        self._cb_recorder = CircuitBreaker(fail_max=5, reset_after=30.0, name="recorder")
 
     # -- helper ------------------------------------------------------------
     def _location(self) -> GeoLocation:
@@ -182,7 +188,7 @@ class EnforcementPipeline:
             return
 
         # --- ANPR (degradazione controllata: in caso di errore -> ILLEGGIBILE) ---
-        plate = guard(lambda: self.anpr.read(track, frame_list),
+        plate = guard(lambda: self._cb_anpr.call(lambda: self.anpr.read(track, frame_list)),
                       component="anpr", monitor=self.monitor).value
         if plate is None:
             plate = PlateReading(text="ILLEGGIBILE", confidence=0.0,
@@ -220,12 +226,13 @@ class EnforcementPipeline:
 
         # --- prova: senza pacchetto-prova integro NON si emette il verbale ---
         clip = self._clip_for_track(frame_list, track)
-        violation.evidence = self.recorder.record(vid, clip, track, plate)
+        violation.evidence = self._cb_recorder.call(
+            lambda: self.recorder.record(vid, clip, track, plate))
 
         # --- intestatario (best-effort: errore visura -> NON DISPONIBILE) ---
         owner = None
         if self.registry and plate.valid_format:
-            owner = guard(lambda: self.registry.lookup(plate.text),
+            owner = guard(lambda: self._cb_registry.call(lambda: self.registry.lookup(plate.text)),
                           component="registry", monitor=self.monitor).value
 
         # --- sanzione + verbale ---

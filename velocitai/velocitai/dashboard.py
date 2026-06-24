@@ -84,12 +84,29 @@ def _render_dashboard(state: _State) -> str:
                  f"<td>{o.measured_kmh:.1f} km/h</td><td>{o.contested_kmh:.1f} km/h</td>"
                  f"<td>{o.limit_kmh:.0f} km/h</td><td>{badge}</td></tr>")
 
+    def _status_cls(status: str) -> str:
+        if "DISPATCH" in status or status == "NOTIFIED":
+            return "b-ok"
+        if "DEAD_LETTER" in status or "FAIL" in status:
+            return "b-bad"
+        return "b-warn"
+
     verbali = ""
     for d in r.dispatches:
+        cls = _status_cls(d["status"])
         verbali += (f'<tr><td><a href="/verbale?id={html.escape(d["protocol_number"])}">'
                     f'{html.escape(d["protocol_number"])}</a></td>'
                     f'<td>{html.escape(d.get("recipient") or "-")}</td>'
-                    f'<td><span class="badge b-bad">{html.escape(d["status"])}</span></td></tr>')
+                    f'<td><span class="badge {cls}">{html.escape(d["status"])}</span></td></tr>')
+
+    # Indicatore di resilienza/salute del sistema.
+    health = r.health or {}
+    healthy = health.get("healthy", True)
+    hcls, htxt = ("b-ok", "OPERATIVO") if healthy else ("b-warn", "DEGRADATO")
+    n_err = r.stats.get("errors", 0)
+    health_html = (f'<span class="badge {hcls}">{htxt}</span>'
+                   f' &middot; guasti isolati: {n_err}'
+                   f' &middot; componenti monitorati: {len(health.get("components", {}))}')
 
     return f"""<!doctype html><html lang="it"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -106,6 +123,8 @@ def _render_dashboard(state: _State) -> str:
 <h2>Verbali emessi</h2>
 <table><thead><tr><th>Protocollo</th><th>Destinatario PEC</th><th>Stato</th></tr></thead>
 <tbody>{verbali or '<tr><td colspan=3>Nessun verbale</td></tr>'}</tbody></table>
+<h2>Stato sistema (resilienza)</h2>
+<div class="note" style="border-top:none;margin-top:0">{health_html}</div>
 <div class="note">Demo a scopo dimostrativo. Gli importi e i parametri legali sono
 configurabili; l'impiego in esercizio richiede omologazione MIT, taratura periodica
 e conformita' GDPR (vedi LEGAL_COMPLIANCE.md). Endpoint dati: <a href="/api/violations">/api/violations</a>.</div>

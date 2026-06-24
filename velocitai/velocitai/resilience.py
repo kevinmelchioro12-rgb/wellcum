@@ -336,27 +336,39 @@ class IssuedLedger:
         self._load()
 
     def _load(self) -> None:
+        # Formato append-only: una chiave per riga. Caricamento tollerante (una
+        # riga corrotta da un crash a meta' scrittura viene semplicemente saltata,
+        # e l'idempotenza tollera comunque una chiave mancante o doppia).
         if not os.path.exists(self.path):
             return
         try:
             with open(self.path, encoding="utf-8") as fh:
-                data = json.load(fh)
-            self._keys = set(data.get("keys", []))
-        except (OSError, ValueError) as exc:
+                for line in fh:
+                    k = line.strip()
+                    if k:
+                        self._keys.add(k)
+        except OSError as exc:
             log.error("Ledger illeggibile %s: %s (riparto vuoto)", self.path, exc)
             self._keys = set()
 
     def key_for(self, device_id: str, plate: str, ts: float,
                 extra: str = "") -> str:
         bucket = int(ts // self.window_s) if self.window_s > 0 else int(ts)
-        return f"{device_id}|{plate}|{bucket}|{extra}"
+        key = f"{device_id}|{plate}|{bucket}|{extra}"
+        return key.replace("\n", " ").replace("\r", " ")
 
     def seen(self, key: str) -> bool:
         return key in self._keys
 
     def add(self, key: str) -> None:
+        # Append O(1) e durabile: niente riscrittura dell'intero file ad ogni
+        # violazione (evita un costo O(n^2) ai volumi di esercizio).
         if key in self._keys:
             return
         self._keys.add(key)
-        atomic_write_text(self.path, json.dumps(
-            {"keys": sorted(self._keys)}, ensure_ascii=False, indent=2))
+        os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
+        line = key.replace("\n", " ").replace("\r", " ")
+        with open(self.path, "a", encoding="utf-8") as fh:
+            fh.write(line + "\n")
+            fh.flush()
+            os.fsync(fh.fileno())

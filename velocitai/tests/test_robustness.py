@@ -114,6 +114,64 @@ class TestPerTrackIsolation(unittest.TestCase):
         self.assertIn("pipeline_track", result.health["components"])
 
 
+class _AlwaysFailRecorder:
+    def __init__(self):
+        self.calls = 0
+
+    def record(self, *a, **k):
+        self.calls += 1
+        raise OSError("storage non disponibile")
+
+
+class TestCircuitBreakerIntegration(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="robust-cb-")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_recorder_breaker_stops_hammering(self):
+        from velocitai.resilience import CircuitBreaker
+        pipe, cfg = _pipeline(self.tmp)
+        rec = _AlwaysFailRecorder()
+        pipe.recorder = rec
+        # soglia bassa: dopo 2 fallimenti il circuito si apre per il resto del run
+        pipe._cb_recorder = CircuitBreaker(fail_max=2, reset_after=1e6, name="recorder")
+        result = pipe.process_frames(default_scenario().frames())
+        # 3 violazioni: le prime 2 invocano il recorder, la 3a e' fast-failed
+        self.assertEqual(len(result.violations), 0)
+        self.assertEqual(result.stats["errors"], 3)
+        self.assertEqual(rec.calls, 2)
+        self.assertEqual(pipe._cb_recorder.state, "open")
+
+
+class TestNotifierDegradation(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="robust-pec-")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_pec_failure_goes_to_dead_letter_keeping_verbale(self):
+        cfg = Config()
+        cfg.recorder.output_dir = os.path.join(self.tmp, "ev")
+        cfg.notifier.output_dir = os.path.join(self.tmp, "vb")
+        cfg.notifier.mode = "pec"      # _send_pec non implementato -> fallisce
+        cfg.registry_path = os.path.join(PROJECT_ROOT, "data", "registry", "owners.json")
+        pipe = build_simulated_pipeline(cfg)
+        result = pipe.process_frames(default_scenario().frames())
+        # le violazioni si accertano comunque e il verbale resta scritto su disco
+        self.assertEqual(len(result.violations), 3)
+        for d in result.dispatches:
+            self.assertEqual(d["status"], "DEAD_LETTER")
+            self.assertTrue(os.path.exists(d["txt_path"]))
+            self.assertTrue(os.path.exists(d["json_path"]))
+        # le notifiche fallite sono in coda per la ripresa automatica
+        dlq = os.path.join(self.tmp, "deadletter")
+        self.assertTrue(any(n.startswith("notification__")
+                            for n in os.listdir(dlq)))
+
+
 class _RaisingANPR:
     def read(self, track, frames):
         raise RuntimeError("backend OCR in crash")
@@ -270,6 +328,34 @@ class TestEvidenceIntegrity(unittest.TestCase):
         ev = result.violations[0].evidence
         os.remove(ev.clip_path)
         self.assertFalse(verify_evidence(ev))
+
+    def test_verification_survives_relocation(self):
+        # l'integrita' deve dipendere dal contenuto, non dalla posizione su disco:
+        # spostare il pacchetto-prova non deve invalidarne la verifica
+        import dataclasses
+        pipe, cfg = _pipeline(self.tmp)
+        result = pipe.process_frames(default_scenario().frames())
+        ev = result.violations[0].evidence
+        old = os.path.dirname(ev.clip_path)
+        new = old + "-archiviato"
+        shutil.move(old, new)
+        moved = dataclasses.replace(
+            ev,
+            clip_path=os.path.join(new, os.path.basename(ev.clip_path)),
+            plate_crop_path=(os.path.join(new, os.path.basename(ev.plate_crop_path))
+                             if ev.plate_crop_path else None))
+        self.assertTrue(verify_evidence(moved))
+
+
+class TestDeterministicAnpr(unittest.TestCase):
+    def test_ocr_noise_is_reproducible_across_instances(self):
+        # il rumore OCR simulato deve essere identico per la stessa targa anche
+        # in processi/istanze diverse (no hash() builtin randomizzato)
+        from velocitai.anpr import SimulatedANPR, PlateValidator
+        a = SimulatedANPR(PlateValidator(), char_error_rate=0.6)
+        b = SimulatedANPR(PlateValidator(), char_error_rate=0.6)
+        for plate in ("AB123CD", "FH983KL", "ZZ999ZZ"):
+            self.assertEqual(a._inject_noise(plate), b._inject_noise(plate))
 
 
 if __name__ == "__main__":

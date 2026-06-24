@@ -55,11 +55,14 @@ def get_logger(name: str = "velocitai") -> logging.Logger:
 def sha256_of_files(paths: Iterable[str]) -> str:
     """Hash di integrita' di un insieme di file (catena di custodia della prova).
 
-    L'ordine dei file e' normalizzato per determinismo.
+    L'ordine dei file e' normalizzato per determinismo. Si lega al digest il
+    *basename* (non il path assoluto): l'integrita' deve dipendere dal contenuto
+    e dal nome del file, NON dalla sua posizione su disco, cosi' la verifica
+    resta valida anche se il pacchetto-prova viene archiviato o spostato.
     """
     h = hashlib.sha256()
     for path in sorted(paths):
-        h.update(path.encode("utf-8"))
+        h.update(os.path.basename(path).encode("utf-8"))
         try:
             with open(path, "rb") as f:
                 for chunk in iter(lambda: f.read(65536), b""):
