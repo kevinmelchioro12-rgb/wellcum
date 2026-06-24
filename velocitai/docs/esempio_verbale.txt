@@ -38,11 +38,11 @@ SANZIONE - Art. 142 comma 9 CdS
   Importo ridotto (entro 5 gg): EUR 396.60
   Decurtazione punti   : 6
   - Sospensione patente: da 1 a 3 mesi
-  Note                 : Importi comprensivi di spese di accertamento/notifica (EUR 16.50). Riduzione del 30% se pagato entro 5 giorni (Art.202).
+  Note                 : Importi comprensivi di spese di accertamento/notifica (EUR 16.50). Riduzione del 30% se pagato entro 5 giorni (Art. 202 CdS).
 
 TERMINI
   Notifica entro       : 22/09/2026 14:30:00 (Art. 201 CdS)
-  Pagamento entro      : 23/08/2026 14:30:07 (Art. 203 CdS)
+  Pagamento entro      : 23/08/2026 14:30:07 (Art. 202 CdS)
 
 PROVA (catena di custodia)
   Pacchetto prova      : data/evidence/24062026-0003/clip_manifest.json

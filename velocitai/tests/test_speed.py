@@ -32,6 +32,12 @@ class TestLinearRegression(unittest.TestCase):
         self.assertAlmostEqual(intercept, 1.0, places=9)
         self.assertAlmostEqual(r2, 1.0, places=9)
 
+    def test_zero_variance_y_gives_zero_r2(self):
+        # y costante: R^2 non definito -> 0.0 (nessun potere esplicativo)
+        slope, intercept, r2 = _linregress([0, 1, 2, 3], [5, 5, 5, 5])
+        self.assertEqual(slope, 0.0)
+        self.assertEqual(r2, 0.0)
+
 
 class TestWorldRegression(unittest.TestCase):
     def test_recovers_true_speed(self):
@@ -62,6 +68,20 @@ class TestLinePair(unittest.TestCase):
         gate = LineGate(0.0, 10.0, 10.0)
         self.assertAlmostEqual(gate.crossing_fraction(8.0, 12.0, 10.0), 0.5)
         self.assertEqual(gate.crossing_fraction(0.0, 5.0, 8.0), -1.0)
+
+    def test_rejects_implausible_speed(self):
+        # entrambi i gate (10 e 30) attraversati in pochi millisecondi:
+        # dt prossimo a zero -> velocita' assurda -> misura scartata (None)
+        from velocitai.models import Track, TrackPoint, BBox, Point
+        gate = LineGate(entry_y=10.0, exit_y=30.0, distance_m=20.0)
+        pts = []
+        ys = [0.0, 12.0, 24.0, 36.0]
+        for i, y in enumerate(ys):
+            t = i * 0.01
+            pts.append(TrackPoint(i, t, BBox(0, y, 2, y + 1), Point(10.0, y)))
+        track = Track(track_id=1, points=pts, confirmed=True)
+        est = LinePairEstimator(gate, min_points=4, max_speed_kmh=400.0)
+        self.assertIsNone(est.estimate(track))
 
 
 if __name__ == "__main__":

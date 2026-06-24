@@ -35,7 +35,8 @@ def _linregress(xs: List[float], ys: List[float]) -> Tuple[float, float, float]:
         return 0.0, mean_y, 0.0
     slope = sxy / sxx
     intercept = mean_y - slope * mean_x
-    r2 = (sxy * sxy) / (sxx * syy) if syy > 0 else 1.0
+    # Varianza nulla di y -> R^2 non definito (0/0): nessun potere esplicativo.
+    r2 = (sxy * sxy) / (sxx * syy) if syy > 0 else 0.0
     return slope, intercept, r2
 
 
@@ -56,9 +57,9 @@ class WorldRegressionEstimator:
         vx, _, r2x = _linregress(ts, xs)
         vy, _, r2y = _linregress(ts, ys)
         speed_ms = (vx * vx + vy * vy) ** 0.5
-        # distanza percorsa nell'intervallo, coerente con la velocita' stimata
-        elapsed = ts[-1] - ts[0]
-        distance = speed_ms * elapsed
+        # distanza = spostamento rettilineo misurato tra primo e ultimo punto
+        # mondo (coerente con la prova, non un valore implicato dal modello)
+        distance = ((xs[-1] - xs[0]) ** 2 + (ys[-1] - ys[0]) ** 2) ** 0.5
         # confidenza: peso dell'R^2 sull'asse a maggior spostamento
         if abs(xs[-1] - xs[0]) >= abs(ys[-1] - ys[0]):
             conf = r2x
@@ -83,9 +84,13 @@ class LinePairEstimator:
     ``gate.distance_m`` la distanza reale (di norma ``|exit_y - entry_y|``).
     """
 
-    def __init__(self, gate: LineGate, min_points: int = 4) -> None:
+    def __init__(self, gate: LineGate, min_points: int = 4,
+                 max_speed_kmh: float = 400.0) -> None:
         self.gate = gate
         self.min_points = min_points
+        # cap fisico: scarta misure assurde da dt prossimo a zero (jitter,
+        # attraversamento di entrambi i gate in un solo intervallo tra fotogrammi)
+        self.max_speed_kmh = max_speed_kmh
 
     def _crossing_time(self, track: Track, target: float) -> Optional[float]:
         pts = [p for p in track.points if p.world_point is not None]
@@ -107,11 +112,14 @@ class LinePairEstimator:
             return None
         dt = abs(t_out - t_in)
         speed_ms = self.gate.distance_m / dt
-        # confidenza: piu' campioni tra i gate -> piu' affidabile
-        between = sum(1 for p in pts
-                      if min(self.gate.entry_y, self.gate.exit_y) <= p.world_point.y
-                      <= max(self.gate.entry_y, self.gate.exit_y))
-        conf = min(1.0, between / max(1, self.min_points))
+        if ms_to_kmh(speed_ms) > self.max_speed_kmh:
+            return None  # dt non plausibile: misura scartata
+        # confidenza: serve almeno un paio di campioni tra i gate; non si
+        # penalizzano i veicoli veloci (che per natura ne hanno di meno)
+        lo = min(self.gate.entry_y, self.gate.exit_y)
+        hi = max(self.gate.entry_y, self.gate.exit_y)
+        between = sum(1 for p in pts if lo <= p.world_point.y <= hi)
+        conf = min(1.0, between / 2.0)
         return SpeedMeasurement(
             track_id=track.track_id,
             measured_speed_kmh=ms_to_kmh(speed_ms),

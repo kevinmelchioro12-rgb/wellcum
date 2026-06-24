@@ -64,24 +64,30 @@ class SanctionCalculator:
             return None
 
         amin, amax = bracket.amount_min_eur, bracket.amount_max_eur
-        night = _is_night(violation.timestamp, self.cfg, self.tz)
+        # Maggiorazione notturna +1/3 SOLO per le fasce eleggibili (commi 9 e
+        # 9-bis, Art. 142 c. 8-bis) e solo tra le 22:00 e le 07:00.
+        night = (bracket.night_eligible
+                 and _is_night(violation.timestamp, self.cfg, self.tz))
         if night:
             f = 1.0 + self.cfg.night_surcharge_factor
             amin, amax = amin * f, amax * f
 
         costs = self.cfg.notification_costs_eur
-        # In misura ridotta si paga il minimo edittale (Art. 202) + spese.
-        due = round(amin + costs, 2)
-        early = round(amin * (1.0 - self.cfg.early_payment_discount) + costs, 2)
+        # Pagamento in misura ridotta (Art. 202 c.1): la somma e' pari al minimo
+        # edittale, o a 1/3 del massimo se piu' favorevole (il minore dei due).
+        reduced_base = min(amin, amax / 3.0)
+        due = round(reduced_base + costs, 2)
+        early = round(reduced_base * (1.0 - self.cfg.early_payment_discount) + costs, 2)
 
         notes = []
         if night:
-            notes.append(f"Maggiorazione notturna +1/3 (Art.142): violazione tra "
-                         f"le {self.cfg.night_start_hour}:00 e le {self.cfg.night_end_hour}:00.")
+            notes.append(f"Maggiorazione notturna +1/3 (Art. 142 c. 8-bis CdS): "
+                         f"violazione tra le {self.cfg.night_start_hour}:00 e le "
+                         f"{self.cfg.night_end_hour}:00.")
         notes.append(f"Importi comprensivi di spese di accertamento/notifica "
                      f"(EUR {costs:.2f}).")
         notes.append(f"Riduzione del {int(self.cfg.early_payment_discount*100)}% se "
-                     f"pagato entro {self.cfg.early_payment_days} giorni (Art.202).")
+                     f"pagato entro {self.cfg.early_payment_days} giorni (Art. 202 CdS).")
 
         return Sanction(
             articolo=bracket.articolo,

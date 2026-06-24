@@ -55,13 +55,17 @@ class TestPipeline(unittest.TestCase):
         self.assertAlmostEqual(by_plate["DZ704XP"].measured_speed_kmh, 121.0, delta=0.5)
 
     def test_evidence_and_chain_of_custody(self):
+        from velocitai.utils import sha256_of_files
         for v in self.result.violations:
             self.assertTrue(v.evidence.clip_path)
             self.assertTrue(os.path.exists(v.evidence.clip_path))
             self.assertEqual(len(v.evidence.sha256), 64)   # SHA-256 hex
-            with open(v.evidence.clip_path, encoding="utf-8") as fh:
-                manifest = json.load(fh)
-            self.assertEqual(manifest["sha256"], v.evidence.sha256)
+            # la prova e' verificabile: ricalcolando l'hash sui file si ottiene
+            # esattamente il digest registrato (catena di custodia)
+            files = [v.evidence.clip_path]
+            if v.evidence.plate_crop_path:
+                files.append(v.evidence.plate_crop_path)
+            self.assertEqual(sha256_of_files(files), v.evidence.sha256)
 
     def test_verbali_written(self):
         for d in self.result.dispatches:

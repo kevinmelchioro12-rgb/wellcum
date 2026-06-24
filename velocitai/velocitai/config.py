@@ -32,6 +32,9 @@ class SpeedBracket:
     amount_max_eur: float
     points_deducted: int
     suspension_months: Tuple[int, int] = (0, 0)
+    # La maggiorazione notturna +1/3 (Art. 142 c. 8-bis) si applica SOLO alle
+    # violazioni dei commi 9 e 9-bis commesse tra le 22:00 e le 07:00.
+    night_eligible: bool = False
 
 
 @dataclass
@@ -54,21 +57,21 @@ class SanctionConfig:
     early_payment_days: int = 5
 
     # Termini perentori
-    notification_deadline_days: int = 90   # Art. 201 CdS
-    payment_deadline_days: int = 60        # Art. 203 CdS
+    notification_deadline_days: int = 90   # Art. 201 CdS (notifica)
+    payment_deadline_days: int = 60        # Art. 202 CdS (pagamento misura ridotta)
 
     # Spese di accertamento e notificazione (a carico del trasgressore)
     notification_costs_eur: float = 16.50
 
     brackets: List[SpeedBracket] = field(default_factory=lambda: [
         SpeedBracket("comma 7", "Art. 142 comma 7 CdS", 0.0, 10.0,
-                     42.0, 173.0, 0, (0, 0)),
+                     42.0, 173.0, 0, (0, 0), night_eligible=False),
         SpeedBracket("comma 8", "Art. 142 comma 8 CdS", 10.0, 40.0,
-                     173.0, 695.0, 3, (0, 0)),
+                     173.0, 695.0, 3, (0, 0), night_eligible=False),
         SpeedBracket("comma 9", "Art. 142 comma 9 CdS", 40.0, 60.0,
-                     543.0, 2170.0, 6, (1, 3)),
+                     543.0, 2170.0, 6, (1, 3), night_eligible=True),
         SpeedBracket("comma 9-bis", "Art. 142 comma 9-bis CdS", 60.0, None,
-                     845.0, 3382.0, 10, (6, 12)),
+                     845.0, 3382.0, 10, (6, 12), night_eligible=True),
     ])
 
 
@@ -182,6 +185,7 @@ def _build_brackets(raw: List[Dict[str, Any]]) -> List[SpeedBracket]:
             amount_min_eur=b["amount_min_eur"], amount_max_eur=b["amount_max_eur"],
             points_deducted=b.get("points_deducted", 0),
             suspension_months=tuple(susp),
+            night_eligible=b.get("night_eligible", False),
         ))
     return out
 

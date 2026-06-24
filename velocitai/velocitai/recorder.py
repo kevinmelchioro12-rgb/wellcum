@@ -68,11 +68,14 @@ class SimulatedRecorder:
             with open(plate_crop_path, "w", encoding="utf-8") as fh:
                 fh.write(plate.text + "\n")
 
+        # L'hash di integrita' e' calcolato sui file della prova e salvato in un
+        # file SEPARATO: incorporarlo nel manifest lo renderebbe non verificabile
+        # (l'hash cambierebbe il contenuto che esso stesso certifica).
         files = [clip_path] + ([plate_crop_path] if plate_crop_path else [])
         digest = sha256_of_files(files)
-        # registra l'hash anche nel manifest (riferimento incrociato)
-        manifest["sha256"] = digest
-        write_json(clip_path, manifest)
+        with open(os.path.join(out, "evidence.sha256"), "w", encoding="utf-8") as fh:
+            for fpath in sorted(files):
+                fh.write(f"{digest}  {os.path.basename(fpath)}\n")
 
         return EvidencePackage(
             clip_path=clip_path,

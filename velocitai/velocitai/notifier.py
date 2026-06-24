@@ -84,7 +84,7 @@ SANZIONE - {s.articolo}
 
 TERMINI
   Notifica entro       : {format_timestamp(verbale.notification_deadline, tz)} (Art. 201 CdS)
-  Pagamento entro      : {format_timestamp(verbale.payment_deadline, tz)} (Art. 203 CdS)
+  Pagamento entro      : {format_timestamp(verbale.payment_deadline, tz)} (Art. 202 CdS)
 
 PROVA (catena di custodia)
   Pacchetto prova      : {v.evidence.clip_path}

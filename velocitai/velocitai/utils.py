@@ -9,8 +9,25 @@ import os
 from datetime import datetime, timezone, timedelta
 from typing import Any, Iterable
 
+try:
+    from zoneinfo import ZoneInfo
+    _ROME = ZoneInfo("Europe/Rome")
+except Exception:  # pragma: no cover - zoneinfo/tzdata assente
+    _ROME = None
+
 MS_PER_S = 1000.0
 KMH_PER_MS = 3.6  # 1 m/s = 3.6 km/h
+
+
+def _tz(tz_offset_hours: float):
+    """Fuso orario italiano DST-aware (Europe/Rome) con fallback a offset fisso.
+
+    Usare il fuso reale e' importante: la maggiorazione notturna (Art. 142
+    c. 8-bis) dipende dall'ora locale e l'Italia osserva l'ora legale.
+    """
+    if _ROME is not None:
+        return _ROME
+    return timezone(timedelta(hours=tz_offset_hours))
 
 
 def ms_to_kmh(speed_ms: float) -> float:
@@ -56,18 +73,15 @@ def sha256_of_bytes(data: bytes) -> str:
 
 
 def format_timestamp(ts: float, tz_offset_hours: float = 1.0) -> str:
-    """Timestamp UNIX -> stringa leggibile in ora locale italiana (CET, default).
+    """Timestamp UNIX -> stringa leggibile in ora locale italiana (DST-aware).
 
-    Per un sistema legale conviene un fuso esplicito; qui CET/CEST e' approssimato
-    con un offset fisso configurabile (la versione di produzione usa zoneinfo).
+    Usa Europe/Rome quando disponibile; ``tz_offset_hours`` e' solo fallback.
     """
-    tz = timezone(timedelta(hours=tz_offset_hours))
-    return datetime.fromtimestamp(ts, tz).strftime("%d/%m/%Y %H:%M:%S")
+    return datetime.fromtimestamp(ts, _tz(tz_offset_hours)).strftime("%d/%m/%Y %H:%M:%S")
 
 
 def hour_of_day(ts: float, tz_offset_hours: float = 1.0) -> int:
-    tz = timezone(timedelta(hours=tz_offset_hours))
-    return datetime.fromtimestamp(ts, tz).hour
+    return datetime.fromtimestamp(ts, _tz(tz_offset_hours)).hour
 
 
 def write_json(path: str, obj: Any) -> None:

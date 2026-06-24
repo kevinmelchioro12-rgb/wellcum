@@ -63,28 +63,32 @@ class Homography:
         image_points: Sequence[Point],
         world_points: Sequence[Point],
     ) -> "Homography":
-        """Stima l'omografia da >=4 corrispondenze (DLT con h33=1).
+        """Stima l'omografia (DLT con h33=1) ai minimi quadrati su TUTTE le
+        corrispondenze fornite (>=4).
 
-        Con esattamente 4 punti il sistema e' 8x8 ed esatto; con piu' punti si
-        prendono i primi 4 non degeneri (sufficiente per la calibrazione fissa
-        di una postazione). Un solver ai minimi quadrati e' previsto nel backend
-        numerico opzionale.
+        Si costruisce il sistema completo 2N x 8 e lo si risolve via equazioni
+        normali (AᵀA x = Aᵀb), 8x8, con l'eliminazione di Gauss gia' disponibile.
+        Con esattamente 4 punti la soluzione e' esatta; con piu' punti il rumore
+        di calibrazione viene mediato, riducendo l'errore su ogni misura a valle.
         """
         if len(image_points) < 4 or len(world_points) < 4:
             raise ValueError("Servono almeno 4 corrispondenze per l'omografia")
-        ip = image_points[:4]
-        wp = world_points[:4]
-        a: List[List[float]] = []
-        b: List[float] = []
-        for (img, wld) in zip(ip, wp):
+        rows: List[List[float]] = []
+        rhs: List[float] = []
+        for (img, wld) in zip(image_points, world_points):
             x, y = img.x, img.y
             u, v = wld.x, wld.y
             # u = (h0 x + h1 y + h2) / (h6 x + h7 y + 1)
-            a.append([x, y, 1, 0, 0, 0, -u * x, -u * y])
-            b.append(u)
-            a.append([0, 0, 0, x, y, 1, -v * x, -v * y])
-            b.append(v)
-        sol = _solve_linear(a, b)
+            rows.append([x, y, 1, 0, 0, 0, -u * x, -u * y])
+            rhs.append(u)
+            rows.append([0, 0, 0, x, y, 1, -v * x, -v * y])
+            rhs.append(v)
+        # equazioni normali: AtA (8x8), Atb (8)
+        n = 8
+        ata = [[sum(rows[k][i] * rows[k][j] for k in range(len(rows)))
+                for j in range(n)] for i in range(n)]
+        atb = [sum(rows[k][i] * rhs[k] for k in range(len(rows))) for i in range(n)]
+        sol = _solve_linear(ata, atb)
         return cls(h=tuple(sol) + (1.0,))
 
     def project(self, p: Point) -> Point:

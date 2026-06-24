@@ -91,14 +91,33 @@ class TestSanction(unittest.TestCase):
         self.assertEqual(s.points_deducted, 10)
         self.assertEqual(s.suspension_months, (6, 12))
 
-    def test_night_surcharge(self):
+    def test_night_surcharge_only_for_commi_9_and_9bis(self):
         night_ts = _epoch(2026, 6, 24, 23, 30)
-        day = self.calc.compute_sanction(_violation(62.0))
-        night = self.calc.compute_sanction(_violation(62.0, ts=night_ts))
-        self.assertTrue(night.night_surcharge_applied)
-        # importo notturno = +1/3 sul minimo edittale
-        self.assertAlmostEqual(night.amount_min_eur, 173.0 * (4.0 / 3.0), places=2)
-        self.assertGreater(night.amount_due_eur, day.amount_due_eur)
+        # comma 8 (over +12) NON e' soggetto a maggiorazione notturna (Art.142 c.8-bis)
+        c8_night = self.calc.compute_sanction(_violation(62.0, ts=night_ts))
+        self.assertFalse(c8_night.night_surcharge_applied)
+        self.assertAlmostEqual(c8_night.amount_min_eur, 173.0, places=2)
+
+        # comma 9 (over +44) SI: +1/3 sul minimo edittale
+        c9_day = self.calc.compute_sanction(_violation(94.0))
+        c9_night = self.calc.compute_sanction(_violation(94.0, ts=night_ts))
+        self.assertFalse(c9_day.night_surcharge_applied)
+        self.assertTrue(c9_night.night_surcharge_applied)
+        self.assertAlmostEqual(c9_night.amount_min_eur, 543.0 * (4.0 / 3.0), places=2)
+        self.assertGreater(c9_night.amount_due_eur, c9_day.amount_due_eur)
+
+
+class TestReducedPayment(unittest.TestCase):
+    def test_one_third_of_max_when_lower_than_minimum(self):
+        # fascia in cui il minimo (300) > 1/3 del massimo (600/3=200):
+        # la misura ridotta deve usare 200, non 300 (Art. 202 c.1)
+        from velocitai.config import SpeedBracket
+        cfg = SanctionConfig()
+        cfg.brackets = [SpeedBracket("test", "Art. X", 0.0, None,
+                                     300.0, 600.0, 0, (0, 0))]
+        calc = SanctionCalculator(cfg, 2.0)
+        s = calc.compute_sanction(_violation(60.0))   # +10 sul limite 50
+        self.assertAlmostEqual(s.amount_due_eur, 200.0 + cfg.notification_costs_eur)
 
 
 class TestVerbale(unittest.TestCase):

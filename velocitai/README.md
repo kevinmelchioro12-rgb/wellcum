@@ -46,9 +46,10 @@ dell'**art. 142 del Codice della Strada**.
 - **ANPR italiano**: validazione del formato targa (`LL NNN LL`, lettere `I O Q U`
   escluse) e correzione posizionale degli errori OCR.
 - **Calcolo sanzione completo**: fasce art. 142 commi 7/8/9/9-bis, decurtazione
-  punti, sospensione patente, **maggiorazione notturna +1/3**, pagamento in
-  misura ridotta (art. 202), spese di notifica e **termini perentori** (90 gg
-  notifica, 60 gg pagamento).
+  punti, sospensione patente, **maggiorazione notturna +1/3 (solo commi 9 e
+  9-bis, art. 142 c. 8-bis)**, pagamento in misura ridotta (art. 202: minimo
+  edittale o 1/3 del massimo se più favorevole), spese di notifica e **termini
+  perentori** (90 gg notifica, 60 gg pagamento).
 - **Catena di custodia della prova**: pacchetto-prova con hash SHA-256.
 - **Console operatore web** (dashboard) e **API JSON**, in sola libreria standard.
 - **Backend pluggable**: i backend di produzione (YOLOv8, EasyOCR, OpenCV, PEC)
