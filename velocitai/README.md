@@ -77,7 +77,7 @@ python3 -m velocitai serve --config config/default.yaml --port 8080
 python3 -m velocitai doctor --config config/default.yaml
 python3 -m velocitai doctor --repair
 
-# 4) Test (74 test, nessuna dipendenza)
+# 4) Test (77 test, nessuna dipendenza)
 python3 -m unittest discover -s tests
 ```
 
@@ -121,7 +121,7 @@ velocitai/
 │   └── cli.py            # interfaccia a riga di comando (demo | serve | doctor)
 ├── config/default.yaml   # configurazione postazione
 ├── data/registry/        # registro intestatari di esempio
-├── tests/                # 74 test (unittest)
+├── tests/                # 77 test (unittest)
 ├── examples/             # uso programmatico
 └── docs/                 # conformità legale, architettura, backend, proposta
 ```

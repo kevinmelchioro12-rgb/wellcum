@@ -54,6 +54,9 @@ python3 -m velocitai doctor --config config/default.yaml
 
 # Come sopra + ripresa automatica degli elementi in coda
 python3 -m velocitai doctor --repair
+
+# Manutenzione: pota dal ledger idempotente le chiavi oltre N giorni
+python3 -m velocitai doctor --prune-ledger-days 120
 ```
 
 `doctor` ritorna codice 0 se tutto è in salute, ≠0 se trova problemi (config non

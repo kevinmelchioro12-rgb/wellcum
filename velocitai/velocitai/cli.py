@@ -186,6 +186,17 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         if res["failed"]:
             rc = 1
 
+    # Manutenzione del ledger idempotente: pota le chiavi oltre i termini
+    # perentori (oltre quei termini la violazione non e' piu' riemettibile).
+    if args.prune_ledger_days is not None:
+        import time
+        from .resilience import IssuedLedger
+        ledger = IssuedLedger(os.path.join(_data_root(config), "issued_ledger.json"))
+        cutoff = time.time() - args.prune_ledger_days * 86400.0
+        removed = ledger.prune(cutoff)
+        print(f"[ok] Ledger: potate {removed} chiavi anteriori a "
+              f"{args.prune_ledger_days} giorni fa.")
+
     print(f"\nEsito: {'OK' if rc == 0 else 'ATTENZIONE'}")
     return rc
 
@@ -222,6 +233,8 @@ def build_parser() -> argparse.ArgumentParser:
     dr.add_argument("--config", help="Percorso del file YAML di configurazione.")
     dr.add_argument("--repair", action="store_true",
                     help="Tenta la ripresa automatica della coda dead-letter.")
+    dr.add_argument("--prune-ledger-days", type=float, default=None,
+                    help="Pota dal ledger idempotente le chiavi piu' vecchie di N giorni.")
     dr.set_defaults(func=cmd_doctor)
     return p
 
