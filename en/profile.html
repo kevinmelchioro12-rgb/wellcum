@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Big Five · OCEAN Psychometric Profile — Wellcum</title>
+<meta name="description" content="Establish your Big Five / OCEAN psychometric profile with a 50-statement test built on the public-domain IPIP markers (same framework as IPIP-NEO and BFI-2). Anonymous, free, runs only in your browser." />
+<link rel="icon" type="image/png" href="../assets/LogoWebpage-1.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Jost:wght@300;400;500;600&family=Hanken+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+<!-- ░░ FILM GRAIN OVERLAY ░░ -->
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ░░ SCROLL PROGRESS ░░ -->
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<!-- ░░ CUSTOM CURSOR ░░ -->
+<div class="cursor" aria-hidden="true"></div>
+<div class="cursor-dot" aria-hidden="true"></div>
+
+<!-- ░░ AGE GATE ░░ -->
+<div class="agegate" id="agegate" role="dialog" aria-modal="true" aria-labelledby="age-title">
+  <div class="agegate__inner">
+    <img src="../assets/LogoWebpage-1.png" alt="Wellcum" class="agegate__logo" />
+    <p class="eyebrow">Men's Spa &amp; Lifestyle Club · Austria</p>
+    <h2 id="age-title" class="agegate__title">Are you of legal age?</h2>
+    <p class="agegate__text">This site contains content reserved for an adult audience. To enter you must be at least <strong>18 years old</strong>.</p>
+    <div class="agegate__actions">
+      <button class="btn btn--gold" id="age-yes" data-magnetic>I am 18 — Enter</button>
+      <a class="btn btn--ghost" href="https://www.google.com" id="age-no">Exit</a>
+    </div>
+  </div>
+</div>
+
+<!-- ░░ PRELOADER ░░ -->
+<div class="preloader" id="preloader" aria-hidden="true">
+  <div class="preloader__mark">W</div>
+  <div class="preloader__bar"><span></span></div>
+</div>
+
+<!-- ░░ NAV ░░ -->
+<header class="nav" id="nav">
+  <a href="index.html#top" class="nav__logo" aria-label="Wellcum — Home">
+    <img src="../assets/LogoWebpage-1.png" alt="Wellcum" />
+  </a>
+  <nav class="nav__links" id="navLinks">
+    <a href="index.html#club">The Club</a>
+    <a href="index.html#spa">Spa</a>
+    <a href="index.html#bar">Bar</a>
+    <a href="index.html#eventi">Events</a>
+    <a href="hotel.html">Hotel</a>
+    <a href="index.html#prezzi">Prices</a>
+    <a href="profile.html" aria-current="page">Profile</a>
+    <a href="index.html#contatti">Contact</a>
+  </nav>
+  <div class="nav__right">
+    <div class="nav__lang" aria-label="Language">
+      <a href="../profilo.html">IT</a><span>/</span><a class="is-active" href="../en/profile.html">EN</a><span>/</span><a href="../de/profil.html">DE</a>
+    </div>
+    <a href="hotel.html#prenota" class="btn btn--gold btn--sm" data-magnetic>Book</a>
+    <button class="nav__burger" id="burger" aria-label="Menu" aria-expanded="false"><span></span><span></span></button>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ░░ ASSESSMENT ░░ -->
+  <section class="section assess" id="assessment" style="padding-top:clamp(120px,16vw,180px);">
+    <div class="section__head">
+      <p class="eyebrow" data-reveal>Big Five · OCEAN</p>
+      <h2 class="section__title" data-reveal>Your <em>psychometric profile</em></h2>
+    </div>
+
+    <div class="assess__intro" data-reveal>
+      <p>Five dimensions capture much of what makes each of us unique. Answer 50 statements honestly and discover where you stand on the <strong>Big Five</strong> traits — openness, conscientiousness, extraversion, agreeableness and neuroticism (emotional stability).</p>
+      <p>The questionnaire draws on the public-domain markers of the <em>International Personality Item Pool</em> (IPIP), the same framework behind instruments such as the <strong>IPIP-NEO</strong> and the <strong>BFI-2</strong>. It is not a clinical diagnosis — it is a mirror to know yourself a little better.</p>
+      <div class="assess__meta">
+        <span>50 statements</span>
+        <span>~7 minutes</span>
+        <span>5 traits · OCEAN</span>
+        <span>100% anonymous</span>
+      </div>
+    </div>
+
+    <div id="scaleLegend"></div>
+
+    <form id="quizForm" novalidate>
+      <div class="qprogress" id="qprogress">
+        <span class="qprogress__num" id="qprogressNum">0 / 50</span>
+        <div class="qprogress__track"><div class="qprogress__fill" id="qprogressFill"></div></div>
+      </div>
+      <div id="quiz"></div>
+      <div id="quizControls" class="assess__actions"></div>
+    </form>
+
+    <div id="results" class="results"></div>
+
+    <p class="assess__note" data-reveal>This tool is for information and self-knowledge only and does not replace a professional psychological assessment. Scores reflect your position relative to the response scale, not a population-normed percentile. Your answers stay on your device and are never sent to any server.</p>
+    <p class="assess__refs" data-reveal>Sources: Goldberg, L. R. (1992) · <a href="https://ipip.ori.org/" target="_blank" rel="noopener">International Personality Item Pool</a> · Soto &amp; John (2017), BFI-2 · Costa &amp; McCrae, NEO-PI-R.</p>
+  </section>
+
+  <!-- ░░ BRIDGE → HOME ░░ -->
+  <section class="bridge" aria-label="Wellcum" style="padding-bottom:clamp(40px,6vw,80px);">
+    <div class="bridge__inner" data-reveal>
+      <div class="bridge__txt">
+        <h3>Back to the <em>realm of pleasure</em></h3>
+        <p>Discover the Wellcum club, spa and events, or book your room at the 4U Hotel.</p>
+      </div>
+      <a href="index.html" class="btn btn--gold" data-magnetic>Go to home</a>
+    </div>
+  </section>
+
+</main>
+
+<!-- ░░ FOOTER ░░ -->
+<footer class="footer">
+  <div class="footer__top">
+    <div class="footer__brand">
+      <img src="../assets/LogoWebpage-1.png" alt="Wellcum" />
+      <p>Men's Spa &amp; Lifestyle Club — the realm of pleasure, 364 days a year.</p>
+    </div>
+    <div class="footer__cols">
+      <div>
+        <h5>The Club</h5>
+        <a href="index.html#club">Wellcum</a><a href="index.html#spa">Spa &amp; Wellness</a><a href="index.html#bar">Bar &amp; Restaurant</a><a href="index.html#vip">VIP</a><a href="index.html#eventi">Events</a>
+      </div>
+      <div>
+        <h5>Information</h5>
+        <a href="index.html#prezzi">Prices &amp; hours</a><a href="profile.html">Psychometric profile</a><a href="index.html#faq">FAQ</a><a href="index.html#contatti">Getting here</a><a href="hotel.html">Hotel</a>
+      </div>
+      <div>
+        <h5>Follow us</h5>
+        <div class="footer__social">
+          <a href="https://t.me/wellclubaustria" target="_blank" rel="noopener" aria-label="Telegram">Telegram</a>
+          <a href="https://www.youtube.com/@Wellc_mClub" target="_blank" rel="noopener" aria-label="YouTube">YouTube</a>
+          <a href="https://www.facebook.com/wellcumclubaustria" target="_blank" rel="noopener" aria-label="Facebook">Facebook</a>
+          <a href="https://it.linkedin.com/company/wellcumclub" target="_blank" rel="noopener" aria-label="LinkedIn">LinkedIn</a>
+          <a href="https://www.tiktok.com/@wellcum_official" target="_blank" rel="noopener" aria-label="TikTok">TikTok</a>
+          <a href="https://twitter.com/Wellcumclub" target="_blank" rel="noopener" aria-label="X">X</a>
+          <a href="https://www.instagram.com/wellc_m.official/" target="_blank" rel="noopener" aria-label="Instagram">Instagram</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer__bottom">
+    <span>© <span id="year">2026</span> WELLCUM — SPA FOR MEN</span>
+    <div class="footer__legal">
+      <a href="#">Legal notice</a><a href="#">Privacy</a><a href="#">Cookies</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+<script src="../js/profile.js"></script>
+</body>
+</html>
