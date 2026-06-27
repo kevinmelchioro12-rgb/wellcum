@@ -165,8 +165,45 @@ class Notifier:
             "status": status,
         }
 
-    def _send_pec(self, verbale: Verbale, text: str, recipient: Optional[str]) -> str:  # pragma: no cover
-        raise NotImplementedError(
-            "Integrazione PEC: invio notificazione tramite gestore PEC accreditato. "
-            "Vedi docs/PRODUCTION_BACKENDS.md."
-        )
+    def _send_pec(self, verbale: Verbale, text: str,
+                  recipient: Optional[str]) -> str:  # pragma: no cover
+        """Invia la notificazione via PEC (SMTP over SSL).
+
+        Le credenziali provengono ESCLUSIVAMENTE dall'ambiente
+        (``VELOCITAI_PEC_USER`` / ``VELOCITAI_PEC_PASSWORD``), mai dalla config o
+        dal codice. Solleva eccezione in caso di errore: il chiamante
+        (``notify``) la ritenta e, se persiste, la mette in dead-letter.
+        """
+        import json
+        import smtplib
+        import ssl
+        from email.message import EmailMessage
+
+        if not recipient:
+            raise ValueError("Destinatario PEC mancante")
+        endpoint = self.config.notifier.pec_endpoint
+        if not endpoint:
+            raise ValueError("notifier.pec_endpoint non configurato")
+        user = os.environ.get("VELOCITAI_PEC_USER")
+        pwd = os.environ.get("VELOCITAI_PEC_PASSWORD")
+        if not user or not pwd:
+            raise ValueError("Credenziali PEC assenti (env VELOCITAI_PEC_USER/PASSWORD)")
+
+        host, _, port_s = endpoint.partition(":")
+        port = int(port_s or 465)
+        msg = EmailMessage()
+        msg["From"] = self.config.notifier.sender
+        msg["To"] = recipient
+        msg["Subject"] = f"Notificazione verbale {verbale.protocol_number} - Art. 142 CdS"
+        msg.set_content(text)
+        msg.add_attachment(
+            json.dumps(verbale.to_dict(), ensure_ascii=False, default=str).encode("utf-8"),
+            maintype="application", subtype="json",
+            filename=f"{verbale.protocol_number}.json")
+
+        ctx = ssl.create_default_context()
+        with smtplib.SMTP_SSL(host, port, context=ctx, timeout=30) as smtp:
+            smtp.login(user, pwd)
+            smtp.send_message(msg)
+        log.info("PEC inviata: verbale %s", verbale.protocol_number)
+        return "DISPATCH"

@@ -90,8 +90,33 @@ class YOLODetector:  # pragma: no cover - richiede ultralytics/torch
         self.model = YOLO(weights)
         self.conf = conf
 
-    def detect(self, frame) -> List[Detection]:  # frame: np.ndarray BGR
-        raise NotImplementedError(
-            "Integrazione YOLOv8: model.predict(frame) -> mappare box+classe in "
-            "Detection. Vedi docs/PRODUCTION_BACKENDS.md."
-        )
+    def detect(self, frame) -> List[Detection]:
+        """Rileva i veicoli in un :class:`~velocitai.sources.VideoFrame`.
+
+        Il punto-mondo e' il **contatto al suolo** del veicolo (centro del lato
+        inferiore della bbox) proiettato dalla calibrazione: e' il punto corretto
+        per misurare la posizione sul piano stradale.
+        """
+        results = self.model.predict(frame.image, conf=self.conf, verbose=False)
+        dets: List[Detection] = []
+        for res in results:
+            boxes = getattr(res, "boxes", None)
+            if boxes is None:
+                continue
+            for b in boxes:
+                cls_id = int(b.cls[0])
+                vclass = self.VEHICLE_CLASSES.get(cls_id)
+                if vclass is None:           # non e' un veicolo
+                    continue
+                x1, y1, x2, y2 = (float(v) for v in b.xyxy[0])
+                bbox = BBox(x1, y1, x2, y2)
+                ground = Point((x1 + x2) / 2.0, y2)   # centro-base = contatto suolo
+                dets.append(Detection(
+                    frame_index=frame.frame_index,
+                    timestamp=frame.timestamp,
+                    bbox=bbox,
+                    vehicle_class=vclass,
+                    confidence=float(b.conf[0]),
+                    world_point=self.calibration.image_to_world(ground),
+                ))
+        return dets

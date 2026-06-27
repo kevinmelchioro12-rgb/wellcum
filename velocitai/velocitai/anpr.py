@@ -165,14 +165,37 @@ class EasyOCRANPR:  # pragma: no cover - richiede dipendenze pesanti
 
     def __init__(self, validator: PlateValidator, gpu: bool = False) -> None:
         import easyocr  # noqa: F401  (errore esplicito se mancante)
-        import cv2  # noqa: F401
         self.validator = validator
-        self._reader = easyocr.Reader([validator.country.lower(), "en"], gpu=gpu)
+        # 'it' non e' un modello dedicato: si usa la lista latina + 'en'
+        self._reader = easyocr.Reader(["en"], gpu=gpu)
 
     def read(self, track: Track, frames: list) -> Optional[PlateReading]:
         # Si sceglie il fotogramma in cui la bbox del veicolo e' piu' grande
-        # (targa piu' leggibile), si ritaglia la regione targa e si esegue OCR.
-        raise NotImplementedError(
-            "Integrazione EasyOCR: ritaglio ROI targa + OCR. "
-            "Vedi docs/PRODUCTION_BACKENDS.md per il wiring completo."
-        )
+        # (targa piu' leggibile), si ritaglia la ROI e si esegue OCR.
+        if not track.points:
+            return None
+        best = max(track.points, key=lambda p: p.bbox.area)
+        frame = next((f for f in frames
+                      if getattr(f, "frame_index", None) == best.frame_index), None)
+        if frame is None or getattr(frame, "image", None) is None:
+            return None
+        img = frame.image
+        h, w = img.shape[:2]
+        x1 = max(0, int(best.bbox.x1)); y1 = max(0, int(best.bbox.y1))
+        x2 = min(w, int(best.bbox.x2)); y2 = min(h, int(best.bbox.y2))
+        if x2 <= x1 or y2 <= y1:
+            return None
+        roi = img[y1:y2, x1:x2]
+        # candidati OCR: testo + confidenza; si normalizza e si sceglie il
+        # migliore che superi la validazione di formato.
+        best_reading: Optional[PlateReading] = None
+        for item in self._reader.readtext(roi):
+            text, conf = item[1], float(item[2])
+            reading = self.validator.validate(text, confidence=conf,
+                                              bbox=best.bbox)
+            if reading.valid_format and (best_reading is None
+                                         or reading.confidence > best_reading.confidence):
+                best_reading = reading
+            elif best_reading is None:
+                best_reading = reading       # fallback: miglior tentativo grezzo
+        return best_reading

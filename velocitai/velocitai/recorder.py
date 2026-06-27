@@ -128,16 +128,83 @@ class SimulatedRecorder:
 
 
 class CV2Recorder:  # pragma: no cover - richiede opencv
-    """Backend di produzione: scrive un MP4 con i fotogrammi reali (ndarray BGR)."""
+    """Backend di produzione: scrive un MP4 con i fotogrammi reali (ndarray BGR).
 
-    def __init__(self, output_dir: str, fps: float = 25.0) -> None:
-        import cv2  # noqa: F401
+    Mantiene la STESSA catena di custodia del backend simulato (digest HMAC se la
+    chiave e' presente, scritture e permessi sicuri).
+    """
+
+    def __init__(self, output_dir: str, fps: float = 25.0,
+                 signing_key: Optional[bytes] = None) -> None:
+        import cv2  # noqa: F401  (errore esplicito se OpenCV manca)
+        self._cv2 = cv2
         self.output_dir = output_dir
         self.fps = fps
+        self.signing_key = signing_key
 
     def record(self, violation_id: str, frames: list, track: Track,
                plate: Optional[PlateReading]) -> EvidencePackage:
-        raise NotImplementedError(
-            "Scrittura MP4 con cv2.VideoWriter + ritaglio targa. "
-            "Vedi docs/PRODUCTION_BACKENDS.md."
+        cv2 = self._cv2
+        out = secure_join(self.output_dir, safe_path_component(
+            violation_id, field="violation_id"))
+        os.makedirs(out, exist_ok=True)
+        set_secure_permissions(out)
+
+        if not frames:
+            raise ValueError("Nessun fotogramma da registrare")
+        h, w = frames[0].image.shape[:2]
+        clip_path = os.path.join(out, "clip.mp4")
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        writer = cv2.VideoWriter(clip_path, fourcc, self.fps, (w, h))
+        try:
+            for fr in frames:
+                writer.write(fr.image)
+        finally:
+            writer.release()
+        set_secure_permissions(clip_path)
+
+        # ritaglio targa dal fotogramma con bbox piu' grande
+        plate_crop_path = None
+        if track.points:
+            best = max(track.points, key=lambda p: p.bbox.area)
+            frame = next((f for f in frames
+                          if getattr(f, "frame_index", None) == best.frame_index), None)
+            if frame is not None:
+                x1 = max(0, int(best.bbox.x1)); y1 = max(0, int(best.bbox.y1))
+                x2 = min(w, int(best.bbox.x2)); y2 = min(h, int(best.bbox.y2))
+                if x2 > x1 and y2 > y1:
+                    plate_crop_path = os.path.join(out, "plate.png")
+                    cv2.imwrite(plate_crop_path, frame.image[y1:y2, x1:x2])
+                    set_secure_permissions(plate_crop_path)
+
+        manifest = {
+            "violation_id": violation_id,
+            "track_id": track.track_id,
+            "plate": plate.text if plate else None,
+            "fps": self.fps,
+            "frame_count": len(frames),
+            "first_ts": frames[0].timestamp,
+            "last_ts": frames[-1].timestamp,
+        }
+        manifest_path = os.path.join(out, "manifest.json")
+        write_json(manifest_path, manifest)
+        set_secure_permissions(manifest_path)
+
+        files = [clip_path, manifest_path] + ([plate_crop_path] if plate_crop_path else [])
+        digest = keyed_digest_of_files(files, self.signing_key)
+        algo = digest_algo(self.signing_key)
+        sha_path = os.path.join(out, "evidence.sha256")
+        atomic_write_text(
+            sha_path,
+            f"# algo={algo}\n" +
+            "".join(f"{digest}  {os.path.basename(p)}\n" for p in sorted(files)))
+        set_secure_permissions(sha_path)
+
+        return EvidencePackage(
+            clip_path=clip_path,
+            frame_paths=[],
+            plate_crop_path=plate_crop_path,
+            sha256=digest,
+            frame_count=len(frames),
+            digest_algo=algo,
         )
