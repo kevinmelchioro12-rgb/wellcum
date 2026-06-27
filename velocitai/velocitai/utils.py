@@ -47,6 +47,12 @@ def get_logger(name: str = "velocitai") -> logging.Logger:
         handler.setFormatter(
             logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
         )
+        # SICUREZZA/GDPR: redige targhe, codici fiscali ed email dai log.
+        try:
+            from .security import PIIRedactingFilter
+            handler.addFilter(PIIRedactingFilter())
+        except Exception:  # pragma: no cover - non blocca il logging
+            pass
         logger.addHandler(handler)
         logger.setLevel(os.environ.get("VELOCITAI_LOGLEVEL", "INFO").upper())
     return logger

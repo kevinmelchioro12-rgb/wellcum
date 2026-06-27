@@ -201,6 +201,7 @@ class EvidencePackage:
     plate_crop_path: Optional[str] = None
     sha256: Optional[str] = None             # hash di integrita' del pacchetto
     frame_count: int = 0
+    digest_algo: str = "sha256"              # "sha256" | "hmac-sha256" (catena custodia)
 
 
 @dataclass

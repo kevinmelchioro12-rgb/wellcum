@@ -17,17 +17,23 @@ from typing import List, Optional
 
 from .models import EvidencePackage, Track, PlateReading
 from .scenario import SimFrame
-from .utils import write_json, sha256_of_files, atomic_write_text, get_logger
+from .utils import write_json, atomic_write_text, get_logger
+from .security import (
+    safe_path_component, secure_join, keyed_digest_of_files, digest_algo,
+    set_secure_permissions, constant_time_equals,
+)
 
 log = get_logger(__name__)
 
 
-def verify_evidence(evidence: EvidencePackage) -> bool:
-    """Verifica la catena di custodia: ricalcola l'hash dei file e lo confronta.
+def verify_evidence(evidence: EvidencePackage, key: Optional[bytes] = None) -> bool:
+    """Verifica la catena di custodia: ricalcola il digest e lo confronta.
 
-    Ritorna ``True`` se la prova e' integra. Usata dal self-check operativo per
-    individuare prove mancanti, troncate o manomesse prima di portarle in
-    giudizio.
+    Ritorna ``True`` se la prova e' integra. Per le prove firmate con HMAC
+    (``digest_algo == 'hmac-sha256'``) e' necessaria la stessa ``key`` usata in
+    registrazione: senza la chiave la verifica fallisce in modo sicuro (una prova
+    manomessa non puo' superare il controllo, ne' essere forgiata da chi non ha
+    il segreto). Il confronto e' a tempo costante.
     """
     if not evidence or not evidence.clip_path or not evidence.sha256:
         return False
@@ -36,23 +42,34 @@ def verify_evidence(evidence: EvidencePackage) -> bool:
         files.append(evidence.plate_crop_path)
     if not all(os.path.exists(p) for p in files):
         return False
-    return sha256_of_files(files) == evidence.sha256
+    # se la prova e' firmata HMAC ma non abbiamo la chiave, fallisce in sicurezza
+    if (evidence.digest_algo or "sha256") == "hmac-sha256" and key is None:
+        return False
+    use_key = key if (evidence.digest_algo or "sha256") == "hmac-sha256" else None
+    return constant_time_equals(keyed_digest_of_files(files, use_key), evidence.sha256)
 
 
 class SimulatedRecorder:
     """Scrive il pacchetto-prova come manifest JSON (modalita' scenario)."""
 
     def __init__(self, output_dir: str, fps: float = 25.0,
-                 pre_frames: int = 30, post_frames: int = 30) -> None:
+                 pre_frames: int = 30, post_frames: int = 30,
+                 signing_key: Optional[bytes] = None) -> None:
         self.output_dir = output_dir
         self.fps = fps
         self.pre_frames = pre_frames
         self.post_frames = post_frames
+        # chiave per la firma HMAC della catena di custodia (None = SHA-256)
+        self.signing_key = signing_key
 
     def record(self, violation_id: str, frames: List[SimFrame],
                track: Track, plate: Optional[PlateReading]) -> EvidencePackage:
-        out = os.path.join(self.output_dir, violation_id)
+        # SICUREZZA: il violation_id finisce in un path -> sanitizzato contro
+        # path traversal e il join e' confinato dentro output_dir.
+        out = secure_join(self.output_dir, safe_path_component(
+            violation_id, field="violation_id"))
         os.makedirs(out, exist_ok=True)
+        set_secure_permissions(out)
 
         manifest = {
             "violation_id": violation_id,
@@ -78,20 +95,27 @@ class SimulatedRecorder:
         }
         clip_path = os.path.join(out, "clip_manifest.json")
         write_json(clip_path, manifest)
+        set_secure_permissions(clip_path)
 
         plate_crop_path = None
         if plate is not None:
             plate_crop_path = os.path.join(out, "plate.txt")
             atomic_write_text(plate_crop_path, plate.text + "\n")
+            set_secure_permissions(plate_crop_path)
 
-        # L'hash di integrita' e' calcolato sui file della prova e salvato in un
-        # file SEPARATO: incorporarlo nel manifest lo renderebbe non verificabile
-        # (l'hash cambierebbe il contenuto che esso stesso certifica).
+        # Catena di custodia: digest dei file della prova, salvato in un file
+        # SEPARATO (incorporarlo nel manifest lo renderebbe non verificabile).
+        # Con una chiave segreta si usa HMAC -> non falsificabile da chi puo'
+        # scrivere i file ma non possiede la chiave.
         files = [clip_path] + ([plate_crop_path] if plate_crop_path else [])
-        digest = sha256_of_files(files)
+        digest = keyed_digest_of_files(files, self.signing_key)
+        algo = digest_algo(self.signing_key)
+        sha_path = os.path.join(out, "evidence.sha256")
         atomic_write_text(
-            os.path.join(out, "evidence.sha256"),
+            sha_path,
+            f"# algo={algo}\n" +
             "".join(f"{digest}  {os.path.basename(p)}\n" for p in sorted(files)))
+        set_secure_permissions(sha_path)
 
         return EvidencePackage(
             clip_path=clip_path,
@@ -99,6 +123,7 @@ class SimulatedRecorder:
             plate_crop_path=plate_crop_path,
             sha256=digest,
             frame_count=len(frames),
+            digest_algo=algo,
         )
 
 

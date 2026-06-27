@@ -57,6 +57,11 @@ dell'**art. 142 del Codice della Strada**.
   *circuit breaker*, **coda dead-letter persistente** con ripresa automatica,
   **ledger idempotente anti doppia-sanzione**, monitor di salute e
   sanitizzazione numerica (nessun dato NaN/inf raggiunge mai il verbale).
+- **Sicurezza by-design** (`security.py`, vedi [`docs/SECURITY.md`](docs/SECURITY.md)):
+  catena di custodia **HMAC** (prova non falsificabile), **audit-log a catena di
+  hash** tamper-evident, sanitizzazione anti path-traversal, redazione PII nei
+  log (GDPR), permessi `0600/0700`, dashboard con token + header di sicurezza +
+  rate-limit, e limiti anti-DoS.
 - **Console operatore web** (dashboard) e **API JSON**, in sola libreria standard.
 - **Backend pluggable**: i backend di produzione (YOLOv8, EasyOCR, OpenCV, PEC)
   si innestano senza toccare l'orchestratore.
@@ -77,7 +82,7 @@ python3 -m velocitai serve --config config/default.yaml --port 8080
 python3 -m velocitai doctor --config config/default.yaml
 python3 -m velocitai doctor --repair
 
-# 4) Test (77 test, nessuna dipendenza)
+# 4) Test (95 test, nessuna dipendenza)
 python3 -m unittest discover -s tests
 ```
 
@@ -116,12 +121,13 @@ velocitai/
 │   ├── notifier.py       # verbale + notifica (PEC simulata)
 │   ├── pipeline.py       # orchestratore (isolamento guasti, idempotenza)
 │   ├── resilience.py     # retry, circuit breaker, dead-letter, health, ledger
+│   ├── security.py       # HMAC custodia, audit-log, anti path-traversal, PII, rate-limit
 │   ├── scenario.py       # mondo sintetico con ground-truth
 │   ├── dashboard.py      # console operatore web
 │   └── cli.py            # interfaccia a riga di comando (demo | serve | doctor)
 ├── config/default.yaml   # configurazione postazione
 ├── data/registry/        # registro intestatari di esempio
-├── tests/                # 77 test (unittest)
+├── tests/                # 95 test (unittest)
 ├── examples/             # uso programmatico
 └── docs/                 # conformità legale, architettura, backend, proposta
 ```
@@ -132,6 +138,7 @@ velocitai/
   alla PA**: omologazione MIT, metrologia legale, GDPR, requisiti del verbale.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — moduli, flusso dati, variante streaming.
 - [`docs/RESILIENCE.md`](docs/RESILIENCE.md) — **affidabilità e auto-riparazione**: scenari di errore, primitivi, `doctor`.
+- [`docs/SECURITY.md`](docs/SECURITY.md) — **sicurezza**: modello di minaccia, catena HMAC, audit-log, hardening, segreti.
 - [`docs/PRODUCTION_BACKENDS.md`](docs/PRODUCTION_BACKENDS.md) — innesto YOLO/EasyOCR/OpenCV/PEC.
 - [`docs/PROPOSTA_COMMERCIALE.md`](docs/PROPOSTA_COMMERCIALE.md) — scheda prodotto / executive summary.
 

@@ -18,6 +18,7 @@ from .config import Config
 from .models import Verbale
 from .utils import format_timestamp, write_json, atomic_write_text, get_logger
 from .resilience import retry, DeadLetterQueue, HealthMonitor, guard
+from .security import safe_path_component, secure_join, set_secure_permissions
 
 log = get_logger(__name__)
 
@@ -114,11 +115,16 @@ class Notifier:
         # 1) Il verbale viene SEMPRE scritto su disco (atto legale) in modo
         #    atomico, anche se la notifica esterna fallira'.
         text = render_verbale_text(verbale, self.config)
-        base = os.path.join(self.output_dir, verbale.protocol_number)
-        txt_path = base + ".txt"
-        json_path = base + ".json"
+        # SICUREZZA: il protocollo finisce nel nome file -> sanitizzato e
+        # confinato dentro output_dir (anti path-traversal).
+        safe_name = safe_path_component(verbale.protocol_number, field="protocol_number")
+        os.makedirs(self.output_dir, exist_ok=True)
+        txt_path = secure_join(self.output_dir, safe_name + ".txt")
+        json_path = secure_join(self.output_dir, safe_name + ".json")
         atomic_write_text(txt_path, text)
+        set_secure_permissions(txt_path)
         write_json(json_path, verbale.to_dict())
+        set_secure_permissions(json_path)
 
         mode = self.config.notifier.mode
         recipient = verbale.owner.pec_email if (verbale.owner and verbale.owner.pec_email) else None

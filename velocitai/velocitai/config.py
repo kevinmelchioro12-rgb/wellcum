@@ -148,6 +148,24 @@ class LocationConfig:
 
 
 @dataclass
+class SecurityConfig:
+    """Parametri di sicurezza. I SEGRETI non stanno qui: si indicano i NOMI
+    delle variabili d'ambiente da cui leggerli a runtime (mai hardcoded)."""
+    # chiave HMAC per la catena di custodia della prova (vuoto = SHA-256 semplice)
+    evidence_key_env: str = "VELOCITAI_EVIDENCE_KEY"
+    # token bearer per la dashboard (vuoto/var assente = nessun accesso esterno)
+    dashboard_token_env: str = "VELOCITAI_DASHBOARD_TOKEN"
+    # chiave HMAC per l'audit-log a catena di hash
+    audit_key_env: str = "VELOCITAI_AUDIT_KEY"
+    # limiti di risorsa (anti-DoS / esaurimento memoria)
+    max_frames: int = 500_000
+    max_vehicles_per_frame: int = 512
+    max_tracks: int = 200_000
+    # la dashboard accetta connessioni solo da localhost se non autenticata
+    require_localhost_without_token: bool = True
+
+
+@dataclass
 class Config:
     device: DeviceConfig = field(default_factory=DeviceConfig)
     location: LocationConfig = field(default_factory=LocationConfig)
@@ -157,6 +175,7 @@ class Config:
     recorder: RecorderConfig = field(default_factory=RecorderConfig)
     notifier: NotifierConfig = field(default_factory=NotifierConfig)
     sanction: SanctionConfig = field(default_factory=SanctionConfig)
+    security: SecurityConfig = field(default_factory=SecurityConfig)
     registry_path: str = "data/registry/owners.json"
     # Offset orario fisso (CET=+1, CEST=+2). Semplificazione: la versione di
     # produzione usa zoneinfo "Europe/Rome" per gestire l'ora legale.
@@ -170,11 +189,17 @@ class Config:
 # Caricamento da YAML con merge ricorsivo sui default
 # ---------------------------------------------------------------------------
 
-def _merge(base: Any, override: Any) -> Any:
+_MAX_MERGE_DEPTH = 40
+
+
+def _merge(base: Any, override: Any, _depth: int = 0) -> Any:
+    if _depth > _MAX_MERGE_DEPTH:
+        # difesa anti-DoS: uno YAML annidato all'infinito non deve esaurire lo stack
+        raise ConfigError("Configurazione troppo annidata (possibile input ostile)")
     if isinstance(base, dict) and isinstance(override, dict):
         out = dict(base)
         for k, v in override.items():
-            out[k] = _merge(base.get(k), v) if k in base else v
+            out[k] = _merge(base.get(k), v, _depth + 1) if k in base else v
         return out
     return override if override is not None else base
 
@@ -310,6 +335,7 @@ def load_config(path: Optional[str] = None, strict: bool = True) -> Config:
             recorder=RecorderConfig(**_known(RecorderConfig, merged.get("recorder", {}))),
             notifier=NotifierConfig(**_known(NotifierConfig, merged.get("notifier", {}))),
             sanction=sanction,
+            security=SecurityConfig(**_known(SecurityConfig, merged.get("security", {}))),
             registry_path=merged.get("registry_path", cfg.registry_path),
             tz_offset_hours=merged.get("tz_offset_hours", cfg.tz_offset_hours),
         )

@@ -20,7 +20,8 @@ from .pipeline import build_simulated_pipeline, PipelineResult
 from .scenario import default_scenario
 from .notifier import render_verbale_text
 from .resilience import DeadLetterQueue
-from .utils import format_timestamp, sha256_of_files
+from .security import keyed_digest_of_files, load_secret, constant_time_equals, AuditLog
+from .utils import format_timestamp
 
 
 def _data_root(config: Config) -> str:
@@ -100,8 +101,12 @@ def cmd_demo(args: argparse.Namespace) -> int:
     return 0
 
 
-def _audit_evidence(root: str) -> dict:
-    """Ricalcola gli hash di tutti i pacchetti-prova e ne verifica l'integrita'."""
+def _audit_evidence(root: str, key=None) -> dict:
+    """Ricalcola i digest di tutti i pacchetti-prova e ne verifica l'integrita'.
+
+    Riconosce l'algoritmo dal file ``evidence.sha256`` (``# algo=...``): per le
+    prove firmate HMAC e' necessaria la stessa ``key``.
+    """
     checked = ok = tampered = 0
     problems: List[str] = []
     if os.path.isdir(root):
@@ -113,10 +118,18 @@ def _audit_evidence(root: str) -> dict:
                     and os.path.exists(clip)):
                 continue
             checked += 1
+            algo, stored = "sha256", None
             try:
                 with open(sha_file, encoding="utf-8") as fh:
-                    stored = fh.readline().split()[0]
+                    for line in fh:
+                        line = line.strip()
+                        if line.startswith("# algo="):
+                            algo = line.split("=", 1)[1].strip()
+                        elif line and stored is None:
+                            stored = line.split()[0]
             except (OSError, IndexError):
+                stored = None
+            if not stored:
                 tampered += 1
                 problems.append(f"{name}: file hash illeggibile")
                 continue
@@ -124,11 +137,16 @@ def _audit_evidence(root: str) -> dict:
             plate = os.path.join(folder, "plate.txt")
             if os.path.exists(plate):
                 files.append(plate)
-            if sha256_of_files(files) == stored:
+            if algo == "hmac-sha256" and key is None:
+                tampered += 1
+                problems.append(f"{name}: prova firmata HMAC ma chiave assente (impossibile verificare)")
+                continue
+            use_key = key if algo == "hmac-sha256" else None
+            if constant_time_equals(keyed_digest_of_files(files, use_key), stored):
                 ok += 1
             else:
                 tampered += 1
-                problems.append(f"{name}: hash NON corrispondente (prova alterata/corrotta)")
+                problems.append(f"{name}: digest NON corrispondente (prova alterata/corrotta)")
     return {"checked": checked, "ok": ok, "tampered": tampered, "problems": problems}
 
 
@@ -153,7 +171,8 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     else:
         print("[ok] Configurazione valida.")
 
-    audit = _audit_evidence(config.recorder.output_dir)
+    ev_key = load_secret(config.security.evidence_key_env)
+    audit = _audit_evidence(config.recorder.output_dir, key=ev_key)
     if audit["checked"] == 0:
         print("[--] Nessun pacchetto-prova da verificare.")
     elif audit["tampered"] == 0:
@@ -163,6 +182,16 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         print(f"[X] Prove compromesse: {audit['tampered']}/{audit['checked']}")
         for p in audit["problems"]:
             print(f"    - {p}")
+
+    # integrita' dell'audit-log a catena di hash (tamper-evident)
+    audit_path = os.path.join(_data_root(config), "audit.log")
+    if os.path.exists(audit_path):
+        alog = AuditLog(audit_path, key=load_secret(config.security.audit_key_env))
+        if alog.verify():
+            print("[ok] Audit-log integro (catena di hash verificata).")
+        else:
+            rc = 1
+            print("[X] Audit-log MANOMESSO: catena di hash interrotta.")
 
     dlq = DeadLetterQueue(os.path.join(_data_root(config), "deadletter"))
     pending = dlq.pending()

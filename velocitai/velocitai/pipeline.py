@@ -34,6 +34,7 @@ from .scenario import SimFrame
 from .resilience import (
     HealthMonitor, DeadLetterQueue, IssuedLedger, CircuitBreaker, guard,
 )
+from .security import load_secret, AuditLog, redact_plate
 from .utils import get_logger, format_timestamp, is_finite_number
 
 log = get_logger(__name__)
@@ -71,7 +72,8 @@ class EnforcementPipeline:
                  calculator: SanctionCalculator, notifier: Notifier,
                  monitor: Optional[HealthMonitor] = None,
                  dead_letter: Optional[DeadLetterQueue] = None,
-                 ledger: Optional[IssuedLedger] = None) -> None:
+                 ledger: Optional[IssuedLedger] = None,
+                 audit_log: Optional[AuditLog] = None) -> None:
         self.config = config
         self.detector = detector
         self.tracker = tracker
@@ -84,6 +86,7 @@ class EnforcementPipeline:
         self.monitor = monitor or HealthMonitor()
         self.dead_letter = dead_letter
         self.ledger = ledger
+        self.audit_log = audit_log
         # Interruttori per backend: dopo una raffica di fallimenti smettono di
         # invocare il backend guasto (fast-fail) evitando di martellarlo e
         # accelerando la degradazione controllata.
@@ -115,13 +118,26 @@ class EnforcementPipeline:
 
     # -- main --------------------------------------------------------------
     def process_frames(self, frames: Iterable[SimFrame]) -> PipelineResult:
+        sec = self.config.security
         frame_list = list(frames)
+        # Anti-DoS: limita il numero di fotogrammi processati (input non fidato).
+        if len(frame_list) > sec.max_frames:
+            log.warning("Troncati %d fotogrammi oltre il limite di sicurezza %d",
+                        len(frame_list) - sec.max_frames, sec.max_frames)
+            frame_list = frame_list[:sec.max_frames]
         # Rielaborazione idempotente: si riparte da stato tracker pulito.
         if hasattr(self.tracker, "reset"):
             guard(lambda: self.tracker.reset(), component="tracker_reset")
         # Ingest robusto: un fotogramma corrotto viene isolato e saltato senza
         # interrompere l'intero accertamento.
         for fr in frame_list:
+            # Anti-DoS: scarta i fotogrammi con un numero abnorme di veicoli.
+            nveh = len(getattr(fr, "vehicles", []) or [])
+            if nveh > sec.max_vehicles_per_frame:
+                log.warning("Fotogramma %s scartato: %d veicoli oltre il limite %d",
+                            getattr(fr, "frame_index", "?"), nveh,
+                            sec.max_vehicles_per_frame)
+                continue
             res = guard(lambda: self.tracker.update(self.detector.detect(fr)),
                         component="ingest", monitor=self.monitor)
             if not res.ok:
@@ -130,6 +146,11 @@ class EnforcementPipeline:
 
         tracks = guard(lambda: self.tracker.finalize(),
                        component="tracker", monitor=self.monitor, default=[]).value or []
+        # Anti-DoS: limita il numero di tracce elaborate.
+        if len(tracks) > sec.max_tracks:
+            log.warning("Limitate %d tracce oltre il limite di sicurezza %d",
+                        len(tracks) - sec.max_tracks, sec.max_tracks)
+            tracks = sorted(tracks, key=lambda t: t.track_id)[:sec.max_tracks]
         result = PipelineResult()
         limit = self.config.location.speed_limit_kmh
         issued_at = frame_list[-1].timestamp if frame_list else 0.0
@@ -249,6 +270,16 @@ class EnforcementPipeline:
         if self.ledger is not None:
             guard(lambda: self.ledger.add(key), component="ledger")
 
+        # audit-log tamper-evident dell'emissione (targa redatta)
+        if self.audit_log is not None:
+            guard(lambda: self.audit_log.record(
+                "violation_issued", violation_id=vid,
+                protocol=verbale.protocol_number,
+                plate=redact_plate(plate.text),
+                speed_kmh=violation.measured_speed_kmh,
+                device_id=self.config.device.device_id),
+                component="audit_log")
+
         self.monitor.record("pipeline_track", ok=True)
         result.violations.append(violation)
         result.verbali.append(verbale)
@@ -286,9 +317,12 @@ def build_simulated_pipeline(config: Config,
                                 config.speed.min_duration_s)
     validator = PlateValidator(country=config.anpr.country, autocorrect=True)
     anpr = SimulatedANPR(validator, char_error_rate=anpr_error_rate)
+    # Catena di custodia firmata HMAC se la chiave e' presente in ambiente.
+    evidence_key = load_secret(config.security.evidence_key_env)
     recorder = SimulatedRecorder(config.recorder.output_dir, fps=config.recorder.fps,
                                  pre_frames=config.recorder.pre_event_frames,
-                                 post_frames=config.recorder.post_event_frames)
+                                 post_frames=config.recorder.post_event_frames,
+                                 signing_key=evidence_key)
     registry = None
     try:
         registry = OwnerRegistry.from_json(config.registry_path)
@@ -302,12 +336,15 @@ def build_simulated_pipeline(config: Config,
     monitor = HealthMonitor()
     dead_letter = None
     ledger = None
+    audit_log = None
     if enable_resilience:
         dead_letter = DeadLetterQueue(os.path.join(data_root, "deadletter"))
         ledger = IssuedLedger(os.path.join(data_root, "issued_ledger.json"))
+        audit_log = AuditLog(os.path.join(data_root, "audit.log"),
+                             key=load_secret(config.security.audit_key_env))
     notifier = Notifier(config, dead_letter=dead_letter, monitor=monitor)
 
     return EnforcementPipeline(config, detector, tracker, estimator, anpr,
                                recorder, registry, calculator, notifier,
                                monitor=monitor, dead_letter=dead_letter,
-                               ledger=ledger)
+                               ledger=ledger, audit_log=audit_log)

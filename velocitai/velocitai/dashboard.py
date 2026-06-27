@@ -22,9 +22,22 @@ from .config import Config, load_config
 from .pipeline import build_simulated_pipeline, PipelineResult
 from .scenario import default_scenario
 from .notifier import render_verbale_text
+from .security import load_secret, constant_time_equals, RateLimiter
 from .utils import format_timestamp, get_logger
 
 log = get_logger(__name__)
+
+# Header di sicurezza applicati a ogni risposta (difesa contro XSS/clickjacking/
+# sniffing; i dati contengono PII -> niente cache).
+_SECURITY_HEADERS = {
+    "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Cache-Control": "no-store, max-age=0",
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
+}
+_LOCAL = {"127.0.0.1", "::1", "localhost"}
 
 _CSS = """
 :root{--bg:#0b1020;--card:#141b30;--ink:#e7ecf5;--muted:#8a97b1;
@@ -143,17 +156,59 @@ def _render_verbale_page(state: _State, protocol: str) -> Optional[str]:
 
 
 class _Handler(BaseHTTPRequestHandler):
-    state: _State = None  # iniettato in serve()
+    state: _State = None        # iniettato in serve()
+    token: bytes = None         # token bearer richiesto (None = nessun token)
+    rate_limiter: RateLimiter = None
+    require_localhost: bool = True
+    protocol_version = "HTTP/1.1"
 
-    def _send(self, code: int, body: str, ctype: str = "text/html; charset=utf-8"):
+    def _send(self, code: int, body: str, ctype: str = "text/html; charset=utf-8",
+              extra_headers: dict = None):
         data = body.encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(data)))
+        for k, v in _SECURITY_HEADERS.items():
+            self.send_header(k, v)
+        for k, v in (extra_headers or {}).items():
+            self.send_header(k, v)
         self.end_headers()
         self.wfile.write(data)
 
+    def _client_ip(self) -> str:
+        return self.client_address[0] if self.client_address else "?"
+
+    def _authorized(self) -> bool:
+        """Controllo d'accesso: token bearer se configurato, altrimenti solo
+        localhost (per non esporre PII a client remoti non autenticati)."""
+        if self.token:
+            hdr = self.headers.get("Authorization", "")
+            if not hdr.startswith("Bearer "):
+                return False
+            return constant_time_equals(hdr[7:].strip(), self.token.decode("utf-8"))
+        if self.require_localhost and self._client_ip() not in _LOCAL:
+            return False
+        return True
+
+    def _guarded(self) -> bool:
+        """Rate-limit + auth comuni a ogni richiesta. True se si puo' procedere."""
+        if self.rate_limiter is not None and not self.rate_limiter.allow(self._client_ip()):
+            self._send(429, "<h1>429</h1> Troppe richieste")
+            return False
+        if not self._authorized():
+            self._send(401, "<h1>401</h1> Accesso non autorizzato",
+                       extra_headers={"WWW-Authenticate": "Bearer"})
+            log.warning("Accesso negato da %s a %s", self._client_ip(), self.path)
+            return False
+        return True
+
     def do_GET(self):  # noqa: N802
+        # Anti-DoS: rifiuta URL abnormi prima di qualunque elaborazione.
+        if len(self.path) > 2048:
+            self._send(414, "<h1>414</h1> URI troppo lungo")
+            return
+        if not self._guarded():
+            return
         parsed = urlparse(self.path)
         if parsed.path == "/":
             self._send(200, _render_dashboard(self.state))
@@ -186,6 +241,14 @@ class _Handler(BaseHTTPRequestHandler):
         else:
             self._send(404, "<h1>404</h1>")
 
+    def _reject_method(self):
+        self._send(405, "<h1>405</h1> Metodo non consentito",
+                   extra_headers={"Allow": "GET"})
+
+    # Solo GET e' consentito: ogni altro metodo viene rifiutato (riduce la
+    # superficie d'attacco; nessuna mutazione di stato via HTTP).
+    do_POST = do_PUT = do_DELETE = do_PATCH = do_OPTIONS = do_HEAD = _reject_method
+
     def log_message(self, fmt, *args):  # silenzia il log di default
         pass
 
@@ -199,10 +262,24 @@ def serve(config: Config, port: int = 8080, host: str = "127.0.0.1") -> None:
     state.result = result
     _Handler.state = state
 
+    # Sicurezza: token bearer (se configurato via env), rate-limit, e — in sua
+    # assenza — accesso ristretto a localhost per non esporre PII.
+    token = load_secret(config.security.dashboard_token_env)
+    _Handler.token = token
+    _Handler.rate_limiter = RateLimiter(rate_per_s=20.0, burst=40)
+    _Handler.require_localhost = config.security.require_localhost_without_token
+
+    if not token and host not in _LOCAL:
+        log.warning("ATTENZIONE: binding su %s senza token (%s non impostato). "
+                    "I client remoti saranno RIFIUTATi: imposta il token o usa "
+                    "host=127.0.0.1.", host, config.security.dashboard_token_env)
+
     httpd = ThreadingHTTPServer((host, port), _Handler)
-    log.info("Console VelociTAI su http://%s:%d  (%s violazioni)",
-             host, port, result.stats["violations"])
-    print(f"\n  VelociTAI console -> http://{host}:{port}\n  (Ctrl+C per uscire)\n")
+    auth = "token bearer" if token else "solo-localhost"
+    log.info("Console VelociTAI su http://%s:%d  (%s violazioni, accesso: %s)",
+             host, port, result.stats["violations"], auth)
+    print(f"\n  VelociTAI console -> http://{host}:{port}\n  accesso: {auth}\n"
+          f"  (Ctrl+C per uscire)\n")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
