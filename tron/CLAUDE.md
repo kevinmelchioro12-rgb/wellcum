@@ -12,4 +12,4 @@
 | **Aggiornato** | 2026-06-27 |
 | **Versione documento** | 1.1 |
 
-NEEDS_FULL_BODY
+INLINE_TRANSPORT_NOT_VIABLE
