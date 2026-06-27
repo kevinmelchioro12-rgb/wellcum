@@ -1,10 +1,29 @@
-# Dipendenze dei backend di PRODUZIONE (visione artificiale reale).
-# Non necessarie per la demo/CI: il core usa backend simulati.
+# Dipendenze per la modalita' di PRODUZIONE (backend ML/video/PEC/PDF/API).
+# Il CORE di VelociTAI NON richiede nulla di tutto questo: gira in sola
+# libreria standard. Installare solo per l'esercizio con hardware reale.
+#
+#   pip install -r requirements-prod.txt
+#
+# Versioni pinnate (aggiornare con valutazione di sicurezza delle dipendenze).
+
 -r requirements.txt
-numpy>=1.21
-opencv-python-headless>=4.7
-ultralytics>=8.0        # YOLOv8 - rilevamento veicoli
-easyocr>=1.7            # OCR riconoscimento targhe
-reportlab>=3.6         # generazione verbale in PDF
-fastapi>=0.100
-uvicorn>=0.23
+
+# Rilevamento veicoli (YOLOv8)
+ultralytics==8.3.0
+torch==2.4.1
+
+# Visione artificiale / I/O video (rilevamento, ritaglio, scrittura MP4)
+opencv-python-headless==4.10.0.84
+numpy==2.1.1
+
+# ANPR / OCR targa
+easyocr==1.7.2
+
+# Verbale in PDF (opzionale)
+reportlab==4.2.2
+
+# API REST di produzione (opzionale; la console demo usa http.server stdlib)
+fastapi==0.115.0
+uvicorn==0.30.6
+
+# La notifica PEC usa smtplib (libreria standard): nessuna dipendenza aggiuntiva.
