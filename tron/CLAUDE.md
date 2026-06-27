@@ -12,4 +12,4 @@
 | **Aggiornato** | 2026-06-27 |
 | **Versione documento** | 1.1 |
 
-SENTINEL_DO_NOT_USE
+NEEDS_FULL_BODY
