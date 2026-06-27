@@ -71,6 +71,53 @@ class SimulatedDetector:
         return dets
 
 
+class MotionDetector:  # pragma: no cover - richiede opencv
+    """Rilevatore CLASSICO (senza ML/GPU) basato su sottrazione di sfondo MOG2.
+
+    Adatto a postazioni fisse a basso costo o a demo: il veicolo in movimento e'
+    foreground sullo sfondo statico della strada. Stessa interfaccia di
+    :class:`YOLODetector` / :class:`SimulatedDetector`.
+    """
+
+    def __init__(self, calibration: Calibration, min_area: int = 1200,
+                 history: int = 120, var_threshold: float = 40.0) -> None:
+        import cv2
+        import numpy as np
+        self._cv2 = cv2
+        self._np = np
+        self.calibration = calibration
+        self.min_area = min_area
+        self._bg = cv2.createBackgroundSubtractorMOG2(
+            history=history, varThreshold=var_threshold, detectShadows=False)
+
+    def detect(self, frame) -> List[Detection]:
+        cv2, np = self._cv2, self._np
+        fg = self._bg.apply(frame.image)
+        _, th = cv2.threshold(fg, 200, 255, cv2.THRESH_BINARY)
+        th = cv2.morphologyEx(th, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+        # CLOSE con kernel ampio: unisce le parti di uno stesso veicolo (carrozzeria,
+        # parabrezza, targa) in un unico blob evitando tracce duplicate.
+        th = cv2.morphologyEx(th, cv2.MORPH_CLOSE, np.ones((25, 25), np.uint8))
+        th = cv2.dilate(th, np.ones((5, 5), np.uint8), iterations=2)
+        contours, _ = cv2.findContours(th, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        dets: List[Detection] = []
+        for c in contours:
+            x, y, w, h = cv2.boundingRect(c)
+            if w * h < self.min_area:
+                continue
+            bbox = BBox(float(x), float(y), float(x + w), float(y + h))
+            ground = Point(x + w / 2.0, float(y + h))   # contatto al suolo
+            dets.append(Detection(
+                frame_index=frame.frame_index,
+                timestamp=frame.timestamp,
+                bbox=bbox,
+                vehicle_class=VehicleClass.CAR,
+                confidence=0.9,
+                world_point=self.calibration.image_to_world(ground),
+            ))
+        return dets
+
+
 class YOLODetector:  # pragma: no cover - richiede ultralytics/torch
     """Backend di produzione: Ultralytics YOLOv8 su fotogrammi reali (BGR ndarray).
 

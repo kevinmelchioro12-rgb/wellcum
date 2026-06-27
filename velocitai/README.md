@@ -82,8 +82,12 @@ python3 -m velocitai serve --config config/default.yaml --port 8080
 python3 -m velocitai doctor --config config/default.yaml
 python3 -m velocitai doctor --repair
 
-# 4) Test (95 test, nessuna dipendenza)
+# 4) Test (98 test, core senza dipendenze)
 python3 -m unittest discover -s tests
+
+# 5) Demo VIDEO reale: rileva l'infrazione dai PIXEL (OpenCV classico, no GPU)
+pip install opencv-python-headless numpy
+python3 examples/video_demo.py
 ```
 
 Lo scenario dimostrativo simula 5 veicoli (limite 50 km/h): 2 conformi (di cui
@@ -127,7 +131,7 @@ velocitai/
 │   └── cli.py            # interfaccia a riga di comando (demo | serve | doctor)
 ├── config/default.yaml   # configurazione postazione
 ├── data/registry/        # registro intestatari di esempio
-├── tests/                # 95 test (unittest)
+├── tests/                # 98 test (unittest)
 ├── examples/             # uso programmatico
 └── docs/                 # conformità legale, architettura, backend, proposta
 ```

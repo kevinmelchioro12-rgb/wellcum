@@ -190,7 +190,9 @@ class CV2Recorder:  # pragma: no cover - richiede opencv
         write_json(manifest_path, manifest)
         set_secure_permissions(manifest_path)
 
-        files = [clip_path, manifest_path] + ([plate_crop_path] if plate_crop_path else [])
+        # Catena di custodia sui file-prova (clip + ritaglio targa), coerente con
+        # verify_evidence(); il manifest e' metadato ausiliario.
+        files = [clip_path] + ([plate_crop_path] if plate_crop_path else [])
         digest = keyed_digest_of_files(files, self.signing_key)
         algo = digest_algo(self.signing_key)
         sha_path = os.path.join(out, "evidence.sha256")

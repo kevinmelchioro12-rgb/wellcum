@@ -16,3 +16,6 @@ venv/
 *.pt
 *.onnx
 *.weights
+
+# Artefatti runtime demo video
+examples/_video_demo/
