@@ -257,6 +257,35 @@ def validate_config(cfg: Config) -> List[str]:
     """
     e: List[str] = []
     s = cfg.sanction
+
+    # SICUREZZA: guardia anti type-confusion. Uno YAML con un valore del tipo
+    # sbagliato (es. ``speed_limit_kmh: "veloce"``) non deve far esplodere i
+    # confronti numerici con un TypeError opaco: lo si intercetta come errore di
+    # configurazione PRIMA di proseguire.
+    def _num(x) -> bool:
+        return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+    numeric_fields = [
+        ("location.speed_limit_kmh", cfg.location.speed_limit_kmh),
+        ("sanction.tolerance_percent", s.tolerance_percent),
+        ("sanction.tolerance_min_kmh", s.tolerance_min_kmh),
+        ("sanction.early_payment_discount", s.early_payment_discount),
+        ("sanction.notification_costs_eur", s.notification_costs_eur),
+        ("sanction.night_start_hour", s.night_start_hour),
+        ("sanction.night_end_hour", s.night_end_hour),
+        ("speed.min_track_points", cfg.speed.min_track_points),
+    ]
+    type_errors = [f"{name} deve essere numerico (trovato {type(v).__name__})"
+                   for name, v in numeric_fields if not _num(v)]
+    for i, b in enumerate(s.brackets):
+        for fld in ("over_min_kmh", "amount_min_eur", "amount_max_eur"):
+            if not _num(getattr(b, fld, None)):
+                type_errors.append(f"sanction.brackets[{i}].{fld} deve essere numerico")
+        if b.over_max_kmh is not None and not _num(b.over_max_kmh):
+            type_errors.append(f"sanction.brackets[{i}].over_max_kmh deve essere numerico o nullo")
+    if type_errors:
+        return type_errors      # i confronti sotto assumono valori numerici
+
     if not (0 <= s.tolerance_percent <= 100):
         e.append(f"sanction.tolerance_percent fuori range [0,100]: {s.tolerance_percent}")
     if s.tolerance_min_kmh < 0:

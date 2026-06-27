@@ -180,6 +180,30 @@ class TestPipelineResourceLimits(unittest.TestCase):
         self.assertEqual(result.stats["frames"], 10)
 
 
+class TestDefenseInDepth(unittest.TestCase):
+    def test_protocol_number_sanitizes_device_and_id(self):
+        from velocitai.fines import _protocol_number
+
+        class _V:
+            device_id = "../../evil id"
+            violation_id = "../../../etc/passwd"
+        p = _protocol_number(_V(), 0.0, 0.0)
+        self.assertNotIn("/", p)
+        self.assertNotIn("..", p)
+        self.assertTrue(p.startswith("PL-"))
+
+    def test_config_type_confusion_is_rejected(self):
+        from velocitai.config import Config, validate_config
+        cfg = Config()
+        cfg.location.speed_limit_kmh = "veloce"      # tipo errato da YAML ostile
+        errs = validate_config(cfg)
+        self.assertTrue(any("numerico" in x for x in errs))
+        # non deve sollevare TypeError: ritorna errori puliti
+        cfg2 = Config()
+        cfg2.sanction.tolerance_percent = None
+        self.assertTrue(validate_config(cfg2))
+
+
 class TestDashboardSecurity(unittest.TestCase):
     """Test d'integrazione HTTP del server blindato (token, header, metodi)."""
 

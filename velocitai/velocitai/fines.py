@@ -18,6 +18,7 @@ Gli importi edittali sono configurabili (aggiornamento biennale ISTAT, Art. 195)
 
 from __future__ import annotations
 
+import re
 from typing import Optional
 
 from .config import SanctionConfig, SpeedBracket
@@ -111,8 +112,12 @@ class SanctionCalculator:
 
 def _protocol_number(violation: Violation, issued_at: float, tz: float) -> str:
     # violation_id contiene gia' la data (GGMMAAAA-NNNN); evitiamo ridondanze.
-    dev = (violation.device_id or "VELOCITAI").replace(" ", "")
-    return f"PL-{dev}-{violation.violation_id}"
+    # SICUREZZA (difesa in profondita'): device_id e violation_id confluiscono in
+    # nomi file -> si ammettono solo caratteri sicuri, cosi' il protocollo non
+    # puo' veicolare un path traversal anche se la sanitizzazione a valle mancasse.
+    dev = re.sub(r"[^A-Za-z0-9_-]", "", (violation.device_id or "")) or "VELOCITAI"
+    vid = re.sub(r"[^A-Za-z0-9_-]", "", (violation.violation_id or "")) or "0000"
+    return f"PL-{dev[:32]}-{vid[:48]}"
 
 
 def build_verbale(violation: Violation, owner: Optional[OwnerRecord],

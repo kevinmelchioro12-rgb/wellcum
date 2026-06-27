@@ -96,6 +96,25 @@ nel percorso critico (parsing, sanzioni, prova, verbale), quindi nessun rischio
 supply-chain sul nucleo. Le dipendenze ML/PEC sono confinate ai backend di
 produzione, opzionali e isolati dietro interfacce.
 
+## Rafforzamenti previsti per la produzione (oltre il core stdlib)
+
+Un audit di sicurezza interno ha confermato i controlli sopra e indicato i
+seguenti rafforzamenti per l'esercizio, che richiedono PKI/dipendenze esterne e
+sono quindi fuori dal core a sola libreria standard:
+
+- **Firma elettronica qualificata** del verbale e del pacchetto-prova
+  (RSA-4096/ECDSA con la chiave dell'autorità) per il **non-ripudio** pieno,
+  in aggiunta all'HMAC (che garantisce integrità/autenticità con chiave condivisa).
+- **Marca temporale qualificata RFC 3161** (Time Stamp Authority) per attestare
+  in modo opponibile l'istante dell'accertamento.
+- **Cifratura at-rest** (AES-256) di prove, verbali e registro intestatari, oltre
+  ai permessi `0600/0700` già applicati.
+- **Integrità del ledger** idempotente e dell'audit via HMAC/firma (l'audit-log è
+  già a catena di hash; il ledger può essere firmato analogamente).
+- **TLS** sulla console (reverse-proxy o `ssl.SSLContext`) per il trasporto.
+
+Questi punti sono nella checklist contrattuale di messa in esercizio.
+
 ## Segnalazione vulnerabilità
 
 Per una divulgazione responsabile contattare il responsabile sicurezza del
