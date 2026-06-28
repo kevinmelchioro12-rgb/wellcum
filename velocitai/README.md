@@ -82,10 +82,13 @@ python3 -m velocitai serve --config config/default.yaml --port 8080
 python3 -m velocitai doctor --config config/default.yaml
 python3 -m velocitai doctor --repair
 
-# 4) Test (98 test, core senza dipendenze)
+# 4) Preventivo / TCO indicativo per la PA (vedi docs/PRICING.md)
+python3 -m velocitai quote --postazioni 8 --modello saas --anni 3
+
+# 5) Test (105 test, core senza dipendenze)
 python3 -m unittest discover -s tests
 
-# 5) Demo VIDEO reale: rileva l'infrazione dai PIXEL (OpenCV classico, no GPU)
+# 6) Demo VIDEO reale: rileva l'infrazione dai PIXEL (OpenCV classico, no GPU)
 pip install opencv-python-headless numpy
 python3 examples/video_demo.py
 ```
@@ -126,12 +129,13 @@ velocitai/
 │   ├── pipeline.py       # orchestratore (isolamento guasti, idempotenza)
 │   ├── resilience.py     # retry, circuit breaker, dead-letter, health, ledger
 │   ├── security.py       # HMAC custodia, audit-log, anti path-traversal, PII, rate-limit
+│   ├── pricing.py        # modello di prezzo / preventivo (comando `quote`)
 │   ├── scenario.py       # mondo sintetico con ground-truth
 │   ├── dashboard.py      # console operatore web
 │   └── cli.py            # interfaccia a riga di comando (demo | serve | doctor)
 ├── config/default.yaml   # configurazione postazione
 ├── data/registry/        # registro intestatari di esempio
-├── tests/                # 98 test (unittest)
+├── tests/                # 105 test (unittest)
 ├── examples/             # uso programmatico
 └── docs/                 # conformità legale, architettura, backend, proposta
 ```
@@ -145,6 +149,11 @@ velocitai/
 - [`docs/SECURITY.md`](docs/SECURITY.md) — **sicurezza**: modello di minaccia, catena HMAC, audit-log, hardening, segreti.
 - [`docs/PRODUCTION_BACKENDS.md`](docs/PRODUCTION_BACKENDS.md) — innesto YOLO/EasyOCR/OpenCV/PEC.
 - [`docs/PROPOSTA_COMMERCIALE.md`](docs/PROPOSTA_COMMERCIALE.md) — scheda prodotto / executive summary.
+- [`docs/PRICING.md`](docs/PRICING.md) — **listino e modelli di prezzo** (SaaS, on-prem, pay-per-verbale, chiavi in mano).
+- [`docs/SALES_READINESS.md`](docs/SALES_READINESS.md) — **prontezza alla vendita**: percorso procurement e checklist di conformità.
+- [`docs/CAPITOLATO_TECNICO.md`](docs/CAPITOLATO_TECNICO.md) — specifica tecnica per gare/MEPA.
+
+Licenza d'uso: vedi [`LICENSE`](LICENSE) (proprietaria/commerciale).
 
 ## Avvertenza
 
