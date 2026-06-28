@@ -1,0 +1,21 @@
+# Artefatti runtime (prove, verbali, stato di resilienza)
+data/evidence/
+data/verbali/
+data/deadletter/
+data/issued_ledger.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# Modelli ML di produzione (pesanti, fuori dal repo)
+*.pt
+*.onnx
+*.weights
+
+# Artefatti runtime demo video
+examples/_video_demo/

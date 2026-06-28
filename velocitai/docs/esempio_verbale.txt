@@ -1,0 +1,56 @@
+================================================================================
+                      VERBALE DI CONTESTAZIONE / NOTIFICAZIONE
+                  Violazione dei limiti di velocita' - Art. 142 CdS
+================================================================================
+Autorita' accertatrice : Comando Polizia Locale - Comune di Milano
+Numero verbale         : PL-VELOCITAI-MI-0001-24062026-0003
+Emesso il              : 24/06/2026 14:30:07
+
+STRUMENTO DI MISURA
+  Dispositivo          : VELOCITAI-MI-0001
+  Decreto omologazione : OMOL-DA-DEFINIRE
+  Ultima taratura      : 2026-01-15
+
+LUOGO E DATA DELLA VIOLAZIONE
+  Strada               : Viale Monza km 4+200
+  Comune               : Milano (MI)
+  Direzione            : carreggiata Nord (centro -> periferia)
+  Coordinate           : 45.51200, 9.21600
+  Data e ora           : 24/06/2026 14:30:00
+
+VEICOLO
+  Targa rilevata       : GA419LM  (confidenza ANPR 0.97)
+  Intestatario : Luca Verdi
+  Codice fisc. : VRDLCU78T10F205Z
+  Residenza    : Viale Monza 200, 20128 Milano (MI)
+  Veicolo      : BMW Serie 3
+RILEVAZIONE DELLA VELOCITA'
+  Limite vigente       : 50 km/h
+  Velocita' misurata   : 99.0 km/h
+  Tolleranza applicata : -5.0 km/h (a favore)
+  Velocita' contestata : 94.0 km/h
+  Superamento          : +44.0 km/h
+  Metodo               : line_pair (confidenza 1.00)
+
+SANZIONE - Art. 142 comma 9 CdS
+  Sanzione amministrativa pecuniaria: da EUR 543.00 a EUR 2170.00
+  Pagamento in misura ridotta (entro 60 gg): EUR 559.50
+  Importo ridotto (entro 5 gg): EUR 396.60
+  Decurtazione punti   : 6
+  - Sospensione patente: da 1 a 3 mesi
+  Note                 : Importi comprensivi di spese di accertamento/notifica (EUR 16.50). Riduzione del 30% se pagato entro 5 giorni (Art. 202 CdS).
+
+TERMINI
+  Notifica entro       : 22/09/2026 14:30:00 (Art. 201 CdS)
+  Pagamento entro      : 23/08/2026 14:30:07 (Art. 202 CdS)
+
+PROVA (catena di custodia)
+  Pacchetto prova      : data/evidence/24062026-0003/clip_manifest.json
+  Hash SHA-256         : da80f630a31d498c332cd4d90133bc9c278b8addcb932224090b8081d3233422
+  Fotogrammi           : 72
+
+RICORSI
+  - Ricorso al Prefetto entro 60 giorni (Art. 203 CdS), oppure
+  - Ricorso al Giudice di Pace entro 30 giorni (Art. 204-bis CdS).
+================================================================================
+
