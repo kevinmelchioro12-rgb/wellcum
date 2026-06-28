@@ -71,6 +71,9 @@ dell'**art. 142 del Codice della Strada**.
 ```bash
 cd velocitai
 
+# 0) Installazione (opzionale: abilita il comando `velocitai` e PyYAML)
+pip install -e ".[config]"     # oppure: make install
+
 # 1) Demo end-to-end con stampa del primo verbale
 python3 -m velocitai demo --config config/default.yaml --show-verbale 1
 
@@ -152,8 +155,12 @@ velocitai/
 - [`docs/PRICING.md`](docs/PRICING.md) — **listino e modelli di prezzo** (SaaS, on-prem, pay-per-verbale, chiavi in mano).
 - [`docs/SALES_READINESS.md`](docs/SALES_READINESS.md) — **prontezza alla vendita**: percorso procurement e checklist di conformità.
 - [`docs/CAPITOLATO_TECNICO.md`](docs/CAPITOLATO_TECNICO.md) — specifica tecnica per gare/MEPA.
+- [`docs/sales/`](docs/sales/) — **kit go-to-market** pronto all'uso: scheda
+  one-pager (+ generatore PDF), email di contatto, offerta, pitch + copione demo,
+  gestione obiezioni, proposta pilota, bozza DPIA.
 
 Licenza d'uso: vedi [`LICENSE`](LICENSE) (proprietaria/commerciale).
+Storico versioni: [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Avvertenza
 

@@ -19,3 +19,8 @@ venv/
 
 # Artefatti runtime demo video
 examples/_video_demo/
+
+# Scheda PDF generata (rigenerabile con: make onepager)
+docs/sales/VelociTAI_OnePager.pdf
+*.egg-info/
+build/

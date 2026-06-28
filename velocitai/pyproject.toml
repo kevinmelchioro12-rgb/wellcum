@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "velocitai"
-version = "0.1.0"
+version = "1.0.0"
 description = "Sistema di accertamento automatico dei limiti di velocita': rilevamento veicoli, stima velocita', ANPR, prova video e generazione/notifica del verbale (Art. 142 CdS)."
 readme = "README.md"
 requires-python = ">=3.9"
