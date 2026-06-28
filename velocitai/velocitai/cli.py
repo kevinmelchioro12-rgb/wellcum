@@ -230,6 +230,28 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     return rc
 
 
+def cmd_quote(args: argparse.Namespace) -> int:
+    """Genera un preventivo/TCO indicativo (vedi docs/PRICING.md)."""
+    from .pricing import compute_offer
+    o = compute_offer(postazioni=args.postazioni, model=args.modello,
+                      anni=args.anni, con_centrale=not args.no_centrale,
+                      verbali_anno_postazione=args.verbali_anno)
+    d = o.as_dict()
+    print("\n=== PREVENTIVO INDICATIVO VELOCITAI (IVA esclusa) ===")
+    print(f"Modello         : {d['modello']}")
+    print(f"Postazioni      : {d['postazioni']}    Orizzonte: {d['anni']} anni")
+    if d["sconto_volume_pct"]:
+        print(f"Sconto volume   : -{d['sconto_volume_pct']}%")
+    print(f"Una tantum      : EUR {d['una_tantum_eur']:,.2f}")
+    print(f"Canone annuo    : EUR {d['canone_annuo_eur']:,.2f}")
+    print(f"TCO {d['anni']} anni      : EUR {d['tco_eur']:,.2f}")
+    for n in d["note"]:
+        print(f"  - {n}")
+    print("\nListino completo e modelli: docs/PRICING.md  |  prezzi indicativi, "
+          "da personalizzare in offerta.\n")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="velocitai",
@@ -265,6 +287,17 @@ def build_parser() -> argparse.ArgumentParser:
     dr.add_argument("--prune-ledger-days", type=float, default=None,
                     help="Pota dal ledger idempotente le chiavi piu' vecchie di N giorni.")
     dr.set_defaults(func=cmd_doctor)
+
+    q = sub.add_parser("quote", help="Preventivo/TCO indicativo (docs/PRICING.md).")
+    q.add_argument("--postazioni", type=int, default=1)
+    q.add_argument("--modello", choices=["saas", "onprem", "ppv", "turnkey"],
+                   default="saas")
+    q.add_argument("--anni", type=int, default=3)
+    q.add_argument("--no-centrale", action="store_true",
+                   help="Escludi il modulo Centrale (back-office).")
+    q.add_argument("--verbali-anno", type=int, default=3750,
+                   help="Verbali/anno per postazione (solo modello ppv).")
+    q.set_defaults(func=cmd_quote)
     return p
 
 

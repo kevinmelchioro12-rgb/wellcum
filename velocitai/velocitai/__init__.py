@@ -16,7 +16,7 @@ from .scenario import Scenario, default_scenario
 from .notifier import render_verbale_text
 from .fines import SanctionCalculator, apply_tolerance, classify
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 __all__ = [
     "Config", "load_config",

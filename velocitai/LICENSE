@@ -1,0 +1,40 @@
+VelociTAI — Licenza d'uso proprietaria (Proprietary / Commercial License)
+Copyright (c) 2026. Tutti i diritti riservati. All rights reserved.
+
+1. PROPRIETÀ
+   VelociTAI ("il Software"), il suo codice sorgente, la documentazione e i
+   marchi associati sono di proprietà esclusiva del titolare dei diritti ("il
+   Licenziante"). Il Software è protetto dalle leggi sul diritto d'autore.
+
+2. CONCESSIONE LIMITATA (VALUTAZIONE)
+   In assenza di un separato contratto commerciale scritto, è concesso il solo
+   diritto di VISIONARE e VALUTARE il Software a scopo dimostrativo e di studio,
+   in ambiente non produttivo. Non è concesso alcun diritto d'uso in esercizio.
+
+3. USO IN ESERCIZIO
+   L'impiego del Software per l'accertamento e l'emissione di sanzioni, o
+   qualsiasi uso produttivo presso enti pubblici o privati, è subordinato alla
+   stipula di un CONTRATTO DI LICENZA commerciale con il Licenziante (vedi
+   docs/PRICING.md per i modelli di prezzo) e al rispetto dei requisiti di legge
+   (omologazione MIT, taratura, GDPR/DPIA — vedi docs/LEGAL_COMPLIANCE.md).
+
+4. DIVIETI
+   Salvo diversa pattuizione scritta, è vietato: ridistribuire, sublicenziare,
+   rivendere, decompilare oltre i limiti di legge, o impiegare il Software per
+   emettere atti aventi efficacia legale senza la conformità di cui al punto 3.
+
+5. ESCLUSIONE DI GARANZIA
+   IL SOFTWARE È FORNITO "COSÌ COM'È", SENZA GARANZIE DI ALCUN TIPO. Gli importi,
+   i riferimenti normativi e i parametri sono configurabili e VANNO VERIFICATI
+   con l'ufficio legale prima di qualunque impiego. Il Licenziante non risponde
+   dell'uso del Software in difetto dei requisiti di legge.
+
+6. LIMITAZIONE DI RESPONSABILITÀ
+   Nei limiti consentiti dalla legge, il Licenziante non è responsabile per danni
+   diretti o indiretti derivanti dall'uso o dall'impossibilità d'uso del Software.
+
+7. CONTATTI / LICENZE
+   Per la licenza commerciale, i progetti pilota e le partnership, fare
+   riferimento ai canali indicati in docs/PROPOSTA_COMMERCIALE.md.
+
+L'uso del Software in modo difforme dalla presente licenza non è autorizzato.
